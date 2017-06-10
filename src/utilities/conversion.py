@@ -1,6 +1,7 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
+
 def convert_edge_set_to_dict(E: set) -> dict:
     """
     Utility function to convert a set of edges into a dict that A* can use

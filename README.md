@@ -13,6 +13,10 @@ Plotly (only needed for plotting)
 ## Usage
 
 Examples can be found for rrt and rrt* in both 2 and 3 dimensions.
+- [2D RRT](https://plot.ly/~szanlongo/28/example-2d-rrt/)
+- [3D RRT](https://plot.ly/~szanlongo/30/example-3d-rrt/)
+- [2D RRT*](https://plot.ly/~szanlongo/32/example-2d-rrt/)
+- [3D RRT*](https://plot.ly/~szanlongo/34/example-3d-rrt/)
 
 ### Configuration Space
 Assign bounds to configuration space in form: `[(x_lower, x_upper), (y_lower, y_upper), ...]`

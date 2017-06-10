@@ -1,7 +1,9 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
+
 from src.configuration_space.configuration_space import ConfigurationSpace
+from src.rrt.rrt_star import rrt_star_tree_path
 from src.utilities.plotting import Plot
 
 q = 10  # length of tree edges
@@ -18,12 +20,12 @@ X_dimensions = [(0, 100), (0, 100), (0, 100)]  # dimensions of Configuration Spa
 X = ConfigurationSpace(X_dimensions, O)
 
 # create rrt
-# E, path = rrt_tree_path(X, x_init, n, max_samples, q, x_goal)
+E, path = rrt_star_tree_path(X, x_init, n, max_samples, q, x_goal)
 
 # plot
 plot = Plot("example_3d_rrt_star")
-# plot.plot_tree(X, E)
-# plot.plot_path(X, path)
+plot.plot_tree(X, E)
+plot.plot_path(X, path)
 plot.plot_obstacles(X, O)
 plot.plot_start(X, x_init)
 plot.plot_goal(X, x_goal)
