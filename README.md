@@ -3,6 +3,7 @@
 Collection of rrt-based algorithms
 - rrt
 - rrt* (rrt-star)
+Both implementations scale to n-dimensions.
 
 ## Requirements
 
@@ -10,6 +11,8 @@ Python 3+
 Plotly (only needed for plotting)
 
 ## Usage
+
+Examples can be found for rrt and rrt* in both 2 and 3 dimensions.
 
 ### Configuration Space
 Assign bounds to configuration space in form: `[(x_lower, x_upper), (y_lower, y_upper), ...]`
@@ -28,6 +31,10 @@ Tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...)
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request :D
 
-## TODO
+## Todo
 
-- Use r-trees to reduce time needed for finding vertices and obstacles
+- Use r-trees to reduce time needed for finding vertices and obstacles.
+
+## License
+
+[MIT License](https://github.com/motion-planning/rrt-algorithms/blob/master/LICENSE)
