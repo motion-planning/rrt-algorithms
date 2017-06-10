@@ -1,3 +1,6 @@
+# This file is subject to the terms and conditions defined in
+# file 'LICENSE', which is part of this source code package.
+
 from src.a_star.a_star import a_star_search
 from src.a_star.a_star import reconstruct_path
 from src.configuration_space.configuration_space import ConfigurationSpace

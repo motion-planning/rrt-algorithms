@@ -1,3 +1,6 @@
+# This file is subject to the terms and conditions defined in
+# file 'LICENSE', which is part of this source code package.
+
 from src.a_star.heuristics import heuristic
 from src.utilities.geometry import distance_between_points
 from src.utilities.queues import PriorityQueue
