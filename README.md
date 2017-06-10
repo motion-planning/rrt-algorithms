@@ -1,9 +1,8 @@
 # rrt
 
-Collection of rrt-based algorithms
+Collection of rrt-based algorithms that scale to n-dimensions
 - rrt
 - rrt* (rrt-star)
-Both implementations scale to n-dimensions.
 
 ## Requirements
 
