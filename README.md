@@ -21,10 +21,10 @@ Examples can be found for rrt and rrt* in both 2 and 3 dimensions.
 Assign bounds to configuration space in form: `[(x_lower, x_upper), (y_lower, y_upper), ...]`
 
 ### Start and Goal
-Tuple of form: `(x, y, ...)`
+Points represented by tuples of form: `(x, y, ...)`
 
 ### Obstacles
-Tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...)
+Axis-aligned (hyper)rectangles represented by a tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...)
 
 ## Contributing
 
