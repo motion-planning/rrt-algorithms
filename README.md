@@ -1,9 +1,8 @@
 # rrt
 
-Collection of rrt-based algorithms
+Collection of rrt-based algorithms that scale to n-dimensions
 - rrt
 - rrt* (rrt-star)
-Both implementations scale to n-dimensions.
 
 ## Requirements
 
@@ -22,10 +21,10 @@ Examples can be found for rrt and rrt* in both 2 and 3 dimensions.
 Assign bounds to configuration space in form: `[(x_lower, x_upper), (y_lower, y_upper), ...]`
 
 ### Start and Goal
-Tuple of form: `(x, y, ...)`
+Points represented by tuples of form: `(x, y, ...)`
 
 ### Obstacles
-Obstacles are currently axis-aligned hypercubes. They are defined as tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...). Expanding RRT/RRT* to use non-hypercube obstacles is simply a matter of changing `check_collision` and `obstacle_free` in `ConfigurationSpace`.
+Axis-aligned (hyper)rectangles represented by a tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...)
 
 ## Contributing
 
