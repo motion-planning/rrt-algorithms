@@ -40,7 +40,7 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
             x_nearest = nearest_vertices(V, x_rand)[0]
             x_new = steer(X, x_nearest, x_rand, q)
 
-            if X.obstacle_free(x_nearest, x_new):
+            if X.collision_free(x_nearest, x_new):
                 V.add(x_new)
                 E.add((x_nearest, x_new))
 

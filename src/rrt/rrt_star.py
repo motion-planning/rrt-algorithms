@@ -48,14 +48,14 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
             x_nearest = nearest_vertices(V, x_rand)[0]
             x_new = steer(X, x_nearest, x_rand, q)
 
-            if X.obstacle_free(x_nearest, x_new):
+            if X.collision_free(x_nearest, x_new):
                 X_near = nearest_vertices(V, x_new, len(V))
                 V.add(x_new)
                 x_min = copy.deepcopy(x_nearest)
                 c_min = path_cost(P, x_init, x_nearest) + c(x_nearest, x_new)
 
                 for x_near in X_near:  # connect along a min-cost path
-                    if X.obstacle_free(x_near, x_new) and \
+                    if X.collision_free(x_near, x_new) and \
                                             path_cost(P, x_init, x_near) + c(x_near, x_new) < c_min:
                         x_min = copy.deepcopy(x_near)
                         c_min = path_cost(P, x_init, x_near) + c(x_near, x_new)
@@ -64,7 +64,7 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
                 P[x_new] = x_min
 
                 for x_near in X_near:  # rewire tree
-                    if X.obstacle_free(x_new, x_near) and \
+                    if X.collision_free(x_new, x_near) and \
                                             path_cost(P, x_init, x_new) + c(x_new, x_near) < path_cost(P, x_init,
                                                                                                        x_near):
                         x_parent = P[x_near]

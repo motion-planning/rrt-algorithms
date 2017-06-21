@@ -25,7 +25,7 @@ Assign bounds to configuration space in form: `[(x_lower, x_upper), (y_lower, y_
 Tuple of form: `(x, y, ...)`
 
 ### Obstacles
-Tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...)
+Obstacles are currently axis-aligned hypercubes. They are defined as tuples of form (x_lower, y_lower, ..., x_upper, y_upper, ...). Expanding RRT/RRT* to use non-hypercube obstacles is simply a matter of changing `check_collision` and `obstacle_free` in `ConfigurationSpace`.
 
 ## Contributing
 

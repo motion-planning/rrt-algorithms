@@ -56,7 +56,7 @@ def can_connect_to_goal(X: ConfigurationSpace, V: set, x_goal: tuple, q: float) 
     if distance > q:  # check if close enough
         return False
 
-    if X.obstacle_free(x_nearest[0], x_goal):  # check if obstacle-free
+    if X.collision_free(x_nearest[0], x_goal):  # check if obstacle-free
         return True
 
     return False

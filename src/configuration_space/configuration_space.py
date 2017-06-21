@@ -13,20 +13,20 @@ class ConfigurationSpace(object):
         """
         self.dimensions = len(dimension_lengths)  # number of dimensions
         self.dimension_lengths = dimension_lengths  # length of each dimension
-        self.O = O  # supervision segments
+        self.O = O  # obstacles
 
-    def check_collision(self, x: tuple) -> bool:
+    def obstacle_free(self, x: tuple) -> bool:
         """
         Check if a location resides inside of an obstacle
         :param x: location to check
-        :return: True if not enough operators to avoid collision, False otherwise
+        :return: True if not inside an obstacle, False otherwise
         """
         for O_i in self.O:  # check each obstacle
             # check if point resides within range of each side of obstacle
             if all(i <= j <= k for i, j, k in zip(O_i[:self.dimensions], x, O_i[self.dimensions:])):
-                return True
+                return False
 
-        return False
+        return True
 
     def sample_free(self) -> tuple:
         """
@@ -35,10 +35,10 @@ class ConfigurationSpace(object):
         """
         while True:  # sample until not inside of an obstacle
             x = self.sample()
-            if not self.check_collision(x):
+            if self.obstacle_free(x):
                 return x
 
-    def obstacle_free(self, start: tuple, end: tuple) -> bool:
+    def collision_free(self, start: tuple, end: tuple) -> bool:
         """
         Check if a line segment intersects an obstacle
         :param start: starting point of line
