@@ -1,7 +1,6 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
-
 from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.rrt_star import rrt_star_tree_path
 from src.utilities.plotting import Plot
