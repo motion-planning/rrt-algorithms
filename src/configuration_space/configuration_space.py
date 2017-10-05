@@ -1,7 +1,13 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
-
+import math
 import random
+import uuid
+
+import numpy as np
+from rtree import index
+
+from src.utilities.geometry import distance_between_points
 
 
 class ConfigurationSpace(object):
@@ -13,7 +19,14 @@ class ConfigurationSpace(object):
         """
         self.dimensions = len(dimension_lengths)  # number of dimensions
         self.dimension_lengths = dimension_lengths  # length of each dimension
-        self.O = O  # obstacles
+        p = index.Property()
+        p.dimension = self.dimensions
+        self.idx = index.Index(interleaved=True, properties=p)  # r-tree representation of obstacles
+        self.insert_obstacles(O)
+
+    def insert_obstacles(self, obstacles):
+        for obstacle in obstacles:
+            self.idx.insert(uuid.uuid4(), obstacle)
 
     def obstacle_free(self, x: tuple) -> bool:
         """
@@ -21,12 +34,7 @@ class ConfigurationSpace(object):
         :param x: location to check
         :return: True if not inside an obstacle, False otherwise
         """
-        for O_i in self.O:  # check each obstacle
-            # check if point resides within range of each side of obstacle
-            if all(i <= j <= k for i, j, k in zip(O_i[:self.dimensions], x, O_i[self.dimensions:])):
-                return False
-
-        return True
+        return len(list(self.idx.intersection(x))) == 0
 
     def sample_free(self) -> tuple:
         """
@@ -38,21 +46,30 @@ class ConfigurationSpace(object):
             if self.obstacle_free(x):
                 return x
 
-    def collision_free(self, start: tuple, end: tuple) -> bool:
+    def collision_free(self, start: tuple, end: tuple, r: float) -> bool:
         """
         Check if a line segment intersects an obstacle
         :param start: starting point of line
         :param end: ending point of line
+        :param r: resolution of points to sample along edge when checking for collisions
         :return: True if line segment does not intersect an obstacle, False otherwise
         """
-        for O_i in self.O:  # check each obstacle
-            # check if line intersects range of each side of obstacle
-            # min and max for line endpoints are done to allow for lines that go "backwards"
-            if all(max(min(s_i, e_i), o_s) <= min(max(s_i, e_i), o_e) for s_i, o_s, e_i, o_e in
-                   zip(start, O_i[:self.dimensions], end, O_i[self.dimensions:])):
-                return False
+        n_points = int(math.ceil(distance_between_points(start, end) / r))
+        # prev = 0
+        # for i in range(11, 0, -2):
+        #     scaled_n_points = max(3, int(math.ceil(n_points / i)))
+        #     if scaled_n_points == prev:
+        #         continue
+        #
+        #     prev = scaled_n_points
 
-        return True
+        dim_linspaces = [np.linspace(s_i, e_i, n_points) for s_i, e_i in zip(start, end)]
+        points = [point for point in zip(*dim_linspaces)]
+
+        if all(self.obstacle_free(point) for point in points):
+            return True
+
+        return False
 
     def sample(self) -> tuple:
         """

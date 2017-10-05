@@ -10,7 +10,7 @@ from src.rrt.primitive_procedures import steer, nearest_vertices
 from src.utilities.conversion import convert_edge_set_to_dict
 
 
-def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float,
+def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
                       x_goal: tuple) -> (set, dict):
     """
     Create and return a Rapidly-exploring Random Tree, keeps expanding until can connect to goal
@@ -20,6 +20,7 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
     :param n: number of samples to take each iteration
     :param max_samples: max number of samples before timing out
     :param q: length of new edges added to tree
+    :param r: resolution of points to sample along edge when checking for collisions
     :param x_goal: goal location
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
@@ -28,7 +29,7 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
     samples_taken = 0
 
     while True:
-        if can_connect_to_goal(X, V, x_goal, q):
+        if can_connect_to_goal(X, V, x_goal, q, r):
             print("Testing: Can connect to goal")
             E = connect_to_goal(V, E, x_goal)
             break
@@ -40,7 +41,7 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
             x_nearest = nearest_vertices(V, x_rand)[0]
             x_new = steer(X, x_nearest, x_rand, q)
 
-            if X.collision_free(x_nearest, x_new):
+            if X.collision_free(x_nearest, x_new, r):
                 V.add(x_new)
                 E.add((x_nearest, x_new))
 
@@ -55,7 +56,7 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
     return V, E
 
 
-def rrt_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float,
+def rrt_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
                   x_goal: tuple) -> (set, dict):
     """
     Create and return a Rapidly-exploring Random Tree, keeps expanding until can connect to goal
@@ -65,10 +66,11 @@ def rrt_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int
     :param n: number of samples to take between testing for goal connection
     :param max_samples: max number of samples before timing out
     :param q: length of new edges added to tree
+    :param r: resolution of points to sample along edge when checking for collisions
     :param x_goal: goal location
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
-    V, E = rrt_until_connect(X, x_init, n, max_samples, q, x_goal)
+    V, E = rrt_until_connect(X, x_init, n, max_samples, q, r, x_goal)
     if V is None and E is None:
         return []
     else:

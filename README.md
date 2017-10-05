@@ -4,7 +4,9 @@ Collection of rrt-based algorithms that scale to n-dimensions
 - rrt* (rrt-star)
 
 ## Requirements
-- [Python 3+](https://www.python.org/downloads/) (I like [Anaconda](https://www.continuum.io/downloads))
+- [Python 3+](https://www.python.org/downloads/)
+- [NumPy](http://www.numpy.org/)
+- [Rtree](https://pypi.python.org/pypi/Rtree/)
 - [Plotly](https://plot.ly/python/getting-started/) (only needed for plotting)
 
 ## Usage
@@ -21,6 +23,11 @@ Axis-aligned (hyper)rectangles represented by a tuples of form `(x_lower, y_lowe
 
 Non-axis aligned (hyper)rectangles or other obstacle representations should also work, provided that `collision_free` and `obstacle_free` are updated to work with the new obstacles.
 
+### Resolution
+Assign resolution of edges:
+- `q`: Distance away from existing edges to probe.
+- `r`: Distance between points along edges that are used to check for if the line collides with an obstacle. Higher numbers run faster, but may lead to undetected collisions.
+
 ### Examples
 Visualization examples can be found for rrt and rrt* in both 2 and 3 dimensions.
 - [2D RRT](https://plot.ly/~szanlongo/37/plot/)
@@ -35,10 +42,6 @@ Visualization examples can be found for rrt and rrt* in both 2 and 3 dimensions.
 3. Commit your changes: `git commit -am 'Add some feature'`
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request :D
-
-## Todo
-
-- Use [r-trees](https://pypi.python.org/pypi/Rtree/) to reduce time needed for finding vertices and obstacles.
 
 ## License
 
