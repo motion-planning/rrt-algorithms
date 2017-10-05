@@ -10,6 +10,7 @@ def a_star_search(graph: dict, start: tuple, goal: tuple) -> (dict, dict):
     """
     A* Graph Search
     Based on: http://www.redblobgames.com/pathfinding/a-star/implementation.html#python-astar
+    which was released under an MIT license: http://www.redblobgames.com/
     :param graph: graph in the form vertex: [neighbor_1, neighbor_2, ...]
     :param start: starting vertex
     :param goal: ending vertex
