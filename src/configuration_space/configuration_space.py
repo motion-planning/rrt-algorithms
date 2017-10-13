@@ -1,7 +1,13 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
-
+import math
 import random
+import uuid
+
+import numpy as np
+from rtree import index
+
+from src.utilities.geometry import distance_between_points
 
 
 class ConfigurationSpace(object):
@@ -9,11 +15,22 @@ class ConfigurationSpace(object):
         """
         Initialize Configuration Space
         :param dimension_lengths: range of each dimension
-        :param O: obstacles
+        :param O: list of obstacles
         """
         self.dimensions = len(dimension_lengths)  # number of dimensions
         self.dimension_lengths = dimension_lengths  # length of each dimension
-        self.O = O  # obstacles
+        p = index.Property()
+        p.dimension = self.dimensions
+        self.idx = index.Index(interleaved=True, properties=p)  # r-tree representation of obstacles
+        self.insert_obstacles(O)
+
+    def insert_obstacles(self, obstacles):
+        """
+        Add obstacles to r-tree
+        :param obstacles: list of obstacles
+        """
+        for obstacle in obstacles:
+            self.idx.insert(uuid.uuid4(), obstacle)
 
     def obstacle_free(self, x: tuple) -> bool:
         """
@@ -21,12 +38,7 @@ class ConfigurationSpace(object):
         :param x: location to check
         :return: True if not inside an obstacle, False otherwise
         """
-        for O_i in self.O:  # check each obstacle
-            # check if point resides within range of each side of obstacle
-            if all(i <= j <= k for i, j, k in zip(O_i[:self.dimensions], x, O_i[self.dimensions:])):
-                return False
-
-        return True
+        return len(list(self.idx.intersection(x))) == 0
 
     def sample_free(self) -> tuple:
         """
@@ -38,21 +50,50 @@ class ConfigurationSpace(object):
             if self.obstacle_free(x):
                 return x
 
-    def collision_free(self, start: tuple, end: tuple) -> bool:
+    def collision_free(self, start: tuple, end: tuple, r: float) -> bool:
         """
         Check if a line segment intersects an obstacle
         :param start: starting point of line
         :param end: ending point of line
+        :param r: resolution of points to sample along edge when checking for collisions
         :return: True if line segment does not intersect an obstacle, False otherwise
         """
-        for O_i in self.O:  # check each obstacle
-            # check if line intersects range of each side of obstacle
-            # min and max for line endpoints are done to allow for lines that go "backwards"
-            if all(max(min(s_i, e_i), o_s) <= min(max(s_i, e_i), o_e) for s_i, o_s, e_i, o_e in
-                   zip(start, O_i[:self.dimensions], end, O_i[self.dimensions:])):
+        dist = distance_between_points(start, end)
+        j = 2
+        already_checked = set()  # points along edge that have already been checked for collisions
+        # perform iterative deepening search along edge
+        while j <= dist / r:
+            safe, already_checked = self.check_along_edge(start, end, j, already_checked)
+            if not safe:
+                return False
+
+            j *= 2
+
+        # check at maximum user-defined resolution
+        if j / 2 != r:
+            safe, already_checked = self.check_along_edge(start, end, int(math.ceil(dist / r)), already_checked)
+            if not safe:
                 return False
 
         return True
+
+    def check_along_edge(self, start, end, j, already_checked):
+        """
+        Check points along an edge for collision
+        :param start: starting point of line
+        :param end: ending point of line
+        :param j: number of points to use when discretizing line
+        :param already_checked: set of points that have already been queried
+        :return: True if line segment does not intersect an obstacle, False otherwise, set of points that were queried
+        """
+        dim_linspaces = [np.linspace(s_i, e_i, j) for s_i, e_i in zip(start, end)]
+        points = set([point for point in zip(*dim_linspaces)])
+        points = points - already_checked  # remove points that have already been queried
+        already_checked = already_checked | points  # update queried points
+        if not all(self.obstacle_free(point) for point in points):
+            return False, already_checked
+
+        return True, already_checked
 
     def sample(self) -> tuple:
         """
