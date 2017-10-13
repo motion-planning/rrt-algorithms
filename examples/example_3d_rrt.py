@@ -6,7 +6,7 @@ from src.rrt.rrt import rrt_tree_path
 from src.utilities.plotting import Plot
 
 q = 10  # length of tree edges
-r = 0.1  # length of smallest edge to check for intersection with obstacles
+r = 1  # length of smallest edge to check for intersection with obstacles
 # obstacles
 Obstacles = [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40, 80, 40), (60, 60, 20, 80, 80, 40),
              (60, 20, 20, 80, 40, 40), (60, 20, 60, 80, 40, 80), (20, 60, 60, 40, 80, 80), (60, 60, 60, 80, 80, 80)]
