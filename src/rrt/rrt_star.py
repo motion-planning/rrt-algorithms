@@ -2,6 +2,9 @@
 # file 'LICENSE', which is part of this source code package.
 
 import copy
+import uuid
+
+from rtree import index
 
 from src.a_star.a_star import a_star_search
 from src.a_star.a_star import reconstruct_path
@@ -30,15 +33,19 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
     V = {x_init}
+    p = index.Property()
+    p.dimension = X.dimensions
+    V_rtree = index.Index(interleaved=True, properties=p)
+    V_rtree.insert(uuid.uuid4(), x_init + x_init)
     E = set()
     P = {x_init: None}
 
     samples_taken = 0
 
     while True:
-        if can_connect_to_goal(X, V, x_goal, q, r):
+        if can_connect_to_goal(X, V_rtree, x_goal, q, r):
             print("Testing: Can connect to goal")
-            E = connect_to_goal(V, E, x_goal)
+            E = connect_to_goal(V_rtree, E, x_goal)
             break
 
         print("Can't connect to goal yet")
@@ -46,18 +53,18 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
 
         for i in range(n):
             x_rand = X.sample_free()
-            x_nearest = nearest_vertices(V, x_rand)[0]
+            x_nearest = nearest_vertices(V_rtree, x_rand)[0]
             x_new = steer(X, x_nearest, x_rand, q)
 
             if X.collision_free(x_nearest, x_new, r):
-                X_near = nearest_vertices(V, x_new, len(V))
+                X_near = nearest_vertices(V_rtree, x_new, len(V))
                 V.add(x_new)
+                V_rtree.insert(uuid.uuid4(), x_new + x_new)
                 x_min = copy.deepcopy(x_nearest)
                 c_min = path_cost(P, x_init, x_nearest) + c(x_nearest, x_new)
 
                 for x_near in X_near:  # connect along a min-cost path
-                    if X.collision_free(x_near, x_new, r) and \
-                                            path_cost(P, x_init, x_near) + c(x_near, x_new) < c_min:
+                    if X.collision_free(x_near, x_new, r) and path_cost(P, x_init, x_near) + c(x_near, x_new) < c_min:
                         x_min = copy.deepcopy(x_near)
                         c_min = path_cost(P, x_init, x_near) + c(x_near, x_new)
 
@@ -66,8 +73,8 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
 
                 for x_near in X_near:  # rewire tree
                     if X.collision_free(x_new, x_near, r) and \
-                                            path_cost(P, x_init, x_new) + c(x_new, x_near) < path_cost(P, x_init,
-                                                                                                       x_near):
+                                            path_cost(P, x_init, x_new) + c(x_new, x_near) \
+                                    < path_cost(P, x_init, x_near):
                         x_parent = P[x_near]
 
                         E.remove((x_parent, x_near))

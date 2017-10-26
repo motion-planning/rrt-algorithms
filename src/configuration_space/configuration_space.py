@@ -21,7 +21,7 @@ class ConfigurationSpace(object):
         self.dimension_lengths = dimension_lengths  # length of each dimension
         p = index.Property()
         p.dimension = self.dimensions
-        self.idx = index.Index(interleaved=True, properties=p)  # r-tree representation of obstacles
+        self.obs = index.Index(interleaved=True, properties=p)  # r-tree representation of obstacles
         self.insert_obstacles(O)
 
     def insert_obstacles(self, obstacles):
@@ -30,7 +30,7 @@ class ConfigurationSpace(object):
         :param obstacles: list of obstacles
         """
         for obstacle in obstacles:
-            self.idx.insert(uuid.uuid4(), obstacle)
+            self.obs.insert(uuid.uuid4(), obstacle)
 
     def obstacle_free(self, x: tuple) -> bool:
         """
@@ -38,7 +38,7 @@ class ConfigurationSpace(object):
         :param x: location to check
         :return: True if not inside an obstacle, False otherwise
         """
-        return len(list(self.idx.intersection(x))) == 0
+        return len(list(self.obs.intersection(x))) == 0
 
     def sample_free(self) -> tuple:
         """

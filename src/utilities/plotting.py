@@ -67,6 +67,7 @@ class Plot(object):
         if X.dimensions == 2:  # plot in 2D
             self.layout['shapes'] = []
             for O_i in O:
+                # noinspection PyUnresolvedReferences
                 self.layout['shapes'].append(
                     {
                         'type': 'rect',
