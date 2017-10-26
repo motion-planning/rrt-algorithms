@@ -17,7 +17,7 @@ from src.utilities.geometry import distance_between_points
 
 
 def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
-                           x_goal: tuple) -> (set, dict):
+                           x_goal: tuple, rewire_count: int = None, ) -> (set, dict):
     """
     Create and return a Rapidly-exploring Random Tree
     https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
@@ -30,9 +30,11 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
     :param q: length of new edges added to tree
     :param r: resolution of points to sample along edge when checking for collisions
     :param x_goal: goal location
+    :param rewire_count: number of nearby branches to rewire
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
     V = {x_init}
+    custom_rewire = False if rewire_count is None else True
     p = index.Property()
     p.dimension = X.dimensions
     V_rtree = index.Index(interleaved=True, properties=p)
@@ -57,14 +59,15 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
             x_new = steer(X, x_nearest, x_rand, q)
 
             if X.collision_free(x_nearest, x_new, r):
-                X_near = nearest_vertices(V_rtree, x_new, len(V))
+                rewire_count = len(V) if not custom_rewire else rewire_count
+                X_near = nearest_vertices(V_rtree, x_new, rewire_count)
                 V.add(x_new)
                 V_rtree.insert(uuid.uuid4(), x_new + x_new)
                 x_min = copy.deepcopy(x_nearest)
                 c_min = path_cost(P, x_init, x_nearest) + c(x_nearest, x_new)
 
                 for x_near in X_near:  # connect along a min-cost path
-                    if X.collision_free(x_near, x_new, r) and path_cost(P, x_init, x_near) + c(x_near, x_new) < c_min:
+                    if path_cost(P, x_init, x_near) + c(x_near, x_new) < c_min and X.collision_free(x_near, x_new, r):
                         x_min = copy.deepcopy(x_near)
                         c_min = path_cost(P, x_init, x_near) + c(x_near, x_new)
 
@@ -72,9 +75,8 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
                 P[x_new] = x_min
 
                 for x_near in X_near:  # rewire tree
-                    if X.collision_free(x_new, x_near, r) and \
-                                            path_cost(P, x_init, x_new) + c(x_new, x_near) \
-                                    < path_cost(P, x_init, x_near):
+                    if path_cost(P, x_init, x_new) + c(x_new, x_near) < path_cost(P, x_init, x_near) and \
+                            X.collision_free(x_new, x_near, r):
                         x_parent = P[x_near]
 
                         E.remove((x_parent, x_near))
@@ -86,6 +88,7 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
         if samples_taken > max_samples:
             print("Could not connect to goal")
             V = None
+
             break
 
         print("Finished expanding tree")
@@ -94,8 +97,7 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_sam
 
 
 def rrt_star_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
-                       x_goal: tuple) -> (
-        set, dict):
+                       x_goal: tuple, rewire_count: int = None) -> (set, dict):
     """
     Create and return a Rapidly-exploring Random Tree
     https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
@@ -106,9 +108,10 @@ def rrt_star_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples
     :param q: length of new edges added to tree
     :param r: resolution of points to sample along edge when checking for collisions
     :param x_goal: goal location
+    :param rewire_count: number of nearby branches to rewire
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
-    V, E = rrt_star_until_connect(X, x_init, n, max_samples, q, r, x_goal)
+    V, E = rrt_star_until_connect(X, x_init, n, max_samples, q, r, x_goal, rewire_count)
     if V is None:
         return E, []
     else:
