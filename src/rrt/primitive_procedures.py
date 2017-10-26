@@ -1,8 +1,9 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
-import operator
 from operator import add
+
+from rtree import index
 
 from src.configuration_space.configuration_space import ConfigurationSpace
 from src.utilities.geometry import distance_between_points
@@ -42,59 +43,62 @@ def steer(X: ConfigurationSpace, start: tuple, goal: tuple, distance: float) -> 
     return steered_point
 
 
-def can_connect_to_goal(X: ConfigurationSpace, V: set, x_goal: tuple, q: float, r: float) -> bool:
+def can_connect_to_goal(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, q: float, r: float) -> bool:
     """
     Check if the goal can be connected to the graph
     :param X: Configuration Space
-    :param V: set of all Vertices
+    :param V_rtree: rtree of all Vertices
     :param x_goal: goal location we want to add
     :param q: length of edges to add
     :param r: resolution of points to sample along edge when checking for collisions
     :return: True if can be added, False otherwise
     """
-    x_nearest = nearest_vertices(V, x_goal)
-    distance = distance_between_points(x_nearest[0], x_goal)
+    x_nearest = nearest_vertices(V_rtree, x_goal)[0]
+    distance = distance_between_points(x_nearest, x_goal)
     if distance > q:  # check if close enough
         return False
 
-    if X.collision_free(x_nearest[0], x_goal, r):  # check if obstacle-free
+    if X.collision_free(x_nearest, x_goal, r):  # check if obstacle-free
         return True
 
     return False
 
 
-def connect_to_goal(V: set, E: set, x_goal: tuple) -> set:
+def connect_to_goal(V_rtree: index, E: set, x_goal: tuple) -> set:
     """
     Connect x_goal to graph (does not check if this should be possible, for that use: can_connect_to_goal)
-    :param V: set of all Vertices
+    :param V_rtree: rtree of all Vertices
     :param E: set of all Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     :param x_goal: goal location to add
     :return: updated E
     """
-    x_nearest = nearest_vertices(V, x_goal)[0]
+    x_nearest = nearest_vertices(V_rtree, x_goal)[0]
     E.add((x_nearest, x_goal))
 
     return E
 
 
-def nearest_vertices(V: set, x: tuple, n: int = 1) -> list:
+def nearest_vertices(V_rtree: index, x: tuple, n: int = 1) -> list:
     """
     Return nearest Vertex to x
-    :param V: set of all Vertices
+    :param V_rtree: set of all Vertices
     :param x: vertex we want to get near to
     :param n: number of samples to draw (defaults to 1)
     :return: nearest Vertex
     """
-    vertex_distances = []
-    for v in V:  # distances to all vertices
-        dist = distance_between_points(v, x)
-        vertex_distances.append((dist, v))
+    nearest = list(V_rtree.nearest(x, num_results=n, objects=True))
+    nearest_interleaved = []
+    for vertex in nearest:
+        vertex = vertex.bounds
 
-    vertex_distances.sort(key=operator.itemgetter(0))  # sort by shortest distance
-    vertex_distances = vertex_distances[:n]  # n closest vertices
+        interleaved = []
+        for i in range(2):
+            interleaved.extend([vertex[i + j] for j in range(0, len(vertex), 2)])
 
-    nearest = []
-    for v in vertex_distances:  # remove distance from tuple and only keep vertices
-        nearest.append(v[1])
+        vertex = tuple(interleaved)
 
-    return nearest
+        vertex = vertex[:int(len(vertex) / 2)]
+        vertex = tuple(vertex)
+        nearest_interleaved.append(vertex)
+
+    return nearest_interleaved
