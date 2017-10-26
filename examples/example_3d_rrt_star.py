@@ -13,6 +13,7 @@ Obstacles = [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40
 x_init = (0, 0, 0)  # starting location
 x_goal = (100, 100, 100)  # goal location
 n = 100  # number of samples to take each iteration
+rewire_count = 4  # optional, number of nearby branches to rewire
 max_samples = 5000  # max number of samples to take before timing out
 X_dimensions = [(0, 100), (0, 100), (0, 100)]  # dimensions of Configuration Space
 
@@ -20,7 +21,7 @@ X_dimensions = [(0, 100), (0, 100), (0, 100)]  # dimensions of Configuration Spa
 X = ConfigurationSpace(X_dimensions, Obstacles)
 
 # create rrt
-E, path = rrt_star_tree_path(X, x_init, n, max_samples, q, r, x_goal)
+E, path = rrt_star_tree_path(X, x_init, n, max_samples, q, r, x_goal, rewire_count)
 
 # plot
 plot = Plot("example_3d_rrt_star")
