@@ -25,8 +25,8 @@ Non-axis aligned (hyper)rectangles or other obstacle representations should also
 
 ### Resolution
 Assign resolution of edges:
-- `q`: Distance away from existing edges to probe.
-- `r`: Distance between points along edges that are used to check for if the line collides with an obstacle. Higher numbers run faster, but may lead to undetected collisions.
+- `q`: Distance away from existing vertices to probe.
+- `r`: Discretization length to use for edges when sampling along them to check for collisions. Higher numbers run faster, but may lead to undetected collisions.
 
 ### Examples
 Visualization examples can be found for rrt and rrt* in both 2 and 3 dimensions.
