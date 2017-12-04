@@ -53,7 +53,7 @@ def can_connect_to_goal(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, q:
     :param r: resolution of points to sample along edge when checking for collisions
     :return: True if can be added, False otherwise
     """
-    x_nearest = nearest_vertices(V_rtree, x_goal)[0]
+    x_nearest = list(V_rtree.nearest(x_goal, num_results=1, objects="raw"))[0]
     distance = distance_between_points(x_nearest, x_goal)
     if distance > q:  # check if close enough
         return False
@@ -72,33 +72,7 @@ def connect_to_goal(V_rtree: index, E: set, x_goal: tuple) -> set:
     :param x_goal: goal location to add
     :return: updated E
     """
-    x_nearest = nearest_vertices(V_rtree, x_goal)[0]
+    x_nearest = list(V_rtree.nearest(x_goal, num_results=1, objects="raw"))[0]
     E.add((x_nearest, x_goal))
 
     return E
-
-
-def nearest_vertices(V_rtree: index, x: tuple, n: int = 1) -> list:
-    """
-    Return nearest Vertex to x
-    :param V_rtree: set of all Vertices
-    :param x: vertex we want to get near to
-    :param n: number of samples to draw (defaults to 1)
-    :return: nearest Vertex
-    """
-    nearest = list(V_rtree.nearest(x, num_results=n, objects=True))
-    nearest_interleaved = []
-    for vertex in nearest:
-        vertex = vertex.bounds
-
-        interleaved = []
-        for i in range(2):
-            interleaved.extend([vertex[i + j] for j in range(0, len(vertex), 2)])
-
-        vertex = tuple(interleaved)
-
-        vertex = vertex[:int(len(vertex) / 2)]
-        vertex = tuple(vertex)
-        nearest_interleaved.append(vertex)
-
-    return nearest_interleaved
