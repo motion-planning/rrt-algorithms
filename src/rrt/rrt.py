@@ -9,7 +9,7 @@ from src.a_star.a_star import reconstruct_path
 from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.primitive_procedures import can_connect_to_goal
 from src.rrt.primitive_procedures import connect_to_goal
-from src.rrt.primitive_procedures import steer, nearest_vertices
+from src.rrt.primitive_procedures import steer
 from src.utilities.conversion import convert_edge_set_to_dict
 
 
@@ -31,7 +31,7 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
     p = index.Property()
     p.dimension = X.dimensions
     V_rtree = index.Index(interleaved=True, properties=p)
-    V_rtree.insert(uuid.uuid4(), x_init + x_init)
+    V_rtree.insert(uuid.uuid4(), x_init + x_init, x_init)
     E = set()
     samples_taken = 0
 
@@ -45,12 +45,12 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples:
         print("Expanding tree")
         for i in range(n):
             x_rand = X.sample_free()
-            x_nearest = nearest_vertices(V_rtree, x_rand)[0]
+            x_nearest = list(V_rtree.nearest(x_rand, num_results=1, objects="raw"))[0]
             x_new = steer(X, x_nearest, x_rand, q)
 
             if X.collision_free(x_nearest, x_new, r):
                 V.add(x_new)
-                V_rtree.insert(uuid.uuid4(), x_new + x_new)
+                V_rtree.insert(uuid.uuid4(), x_new + x_new, x_new)
                 E.add((x_nearest, x_new))
 
         samples_taken += n
