@@ -210,8 +210,8 @@ class Plot(object):
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
-    def draw(self):
+    def draw(self, auto_open=True):
         """
         Render the plot to a file
         """
-        py.offline.plot(self.fig, filename=self.filename)
+        py.offline.plot(self.fig, filename=self.filename, auto_open=auto_open)
