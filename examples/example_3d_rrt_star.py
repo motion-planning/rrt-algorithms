@@ -5,7 +5,7 @@ from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.rrt_star import rrt_star_tree_path
 from src.utilities.plotting import Plot
 
-q = 10  # length of tree edges
+Q = [(10, 10), (20, 10), (30, 10)]  # length of tree edges
 r = 1  # length of smallest edge to check for intersection with obstacles
 # obstacles
 Obstacles = [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40, 80, 40), (60, 60, 20, 80, 80, 40),
@@ -21,7 +21,7 @@ X_dimensions = [(0, 100), (0, 100), (0, 100)]  # dimensions of Configuration Spa
 X = ConfigurationSpace(X_dimensions, Obstacles)
 
 # create rrt
-E, path = rrt_star_tree_path(X, x_init, n, max_samples, q, r, x_goal, rewire_count)
+E, path = rrt_star_tree_path(X, x_init, max_samples, Q, r, x_goal, rewire_count)
 
 # plot
 plot = Plot("example_3d_rrt_star")
@@ -30,4 +30,4 @@ plot.plot_path(X, path)
 plot.plot_obstacles(X, Obstacles)
 plot.plot_start(X, x_init)
 plot.plot_goal(X, x_goal)
-plot.draw()
+plot.draw(auto_open=True)

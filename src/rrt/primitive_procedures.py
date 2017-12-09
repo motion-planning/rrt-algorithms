@@ -43,19 +43,19 @@ def steer(X: ConfigurationSpace, start: tuple, goal: tuple, distance: float) -> 
     return steered_point
 
 
-def can_connect_to_goal(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, q: float, r: float) -> bool:
+def can_connect_to_goal(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, Q: list, r: float) -> bool:
     """
     Check if the goal can be connected to the graph
     :param X: Configuration Space
     :param V_rtree: rtree of all Vertices
     :param x_goal: goal location we want to add
-    :param q: length of edges to add
+    :param Q: length of edges to add
     :param r: resolution of points to sample along edge when checking for collisions
     :return: True if can be added, False otherwise
     """
     x_nearest = list(V_rtree.nearest(x_goal, num_results=1, objects="raw"))[0]
     distance = distance_between_points(x_nearest, x_goal)
-    if distance > q:  # check if close enough
+    if distance > max(Q, key=lambda x: x[1])[1]:  # check if close enough
         return False
 
     if X.collision_free(x_nearest, x_goal, r):  # check if obstacle-free

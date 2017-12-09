@@ -11,18 +11,34 @@ from src.utilities.geometry import distance_between_points
 
 
 class ConfigurationSpace(object):
-    def __init__(self, dimension_lengths: list, O: list):
+    def __init__(self, dimension_lengths: list, O: list = None):
         """
         Initialize Configuration Space
         :param dimension_lengths: range of each dimension
         :param O: list of obstacles
         """
+        # sanity check
+        if len(dimension_lengths) < 2:
+            raise Exception("Must have at least 2 dimensions")
         self.dimensions = len(dimension_lengths)  # number of dimensions
+        # sanity checks
+        if any(len(i) != 2 for i in dimension_lengths):
+            raise Exception("Dimensions can only have a start and end")
+        if any(i[0] >= i[1] for i in dimension_lengths):
+            raise Exception("Dimension start must be less than dimension end")
         self.dimension_lengths = dimension_lengths  # length of each dimension
         p = index.Property()
         p.dimension = self.dimensions
         # r-tree representation of obstacles
-        self.obs = index.Index(obstacle_generator(O), interleaved=True, properties=p)
+        # sanity check
+        if any(len(o) / 2 != len(dimension_lengths) for o in O):
+            raise Exception("Obstacle has incorrect dimension definition")
+        if any(o[i] >= o[int(i + len(o) / 2)] for o in O for i in range(int(len(o) / 2))):
+            raise Exception("Obstacle start must be less than obstacle end")
+        if O is None:
+            self.obs = index.Index(interleaved=True, properties=p)
+        else:
+            self.obs = index.Index(obstacle_generator(O), interleaved=True, properties=p)
 
     def obstacle_free(self, x: tuple) -> bool:
         """
