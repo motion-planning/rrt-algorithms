@@ -1,7 +1,7 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
-
 import copy
+import random
 import uuid
 
 from rtree import index
@@ -16,8 +16,8 @@ from src.utilities.conversion import convert_edge_set_to_dict
 from src.utilities.geometry import distance_between_points
 
 
-def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q: list, r: float,
-                           x_goal: tuple, rewire_count: int = None, ) -> (set, dict):
+def rrt_star(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q: list, r: float,
+             x_goal: tuple, rewire_count: int = None, early_exit: bool = True, prc: float = 0.01) -> (set, dict):
     """
     Create and return a Rapidly-exploring Random Tree
     https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
@@ -30,6 +30,8 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: in
     :param r: resolution of points to sample along edge when checking for collisions
     :param x_goal: goal location
     :param rewire_count: number of nearby branches to rewire
+    :param early_exit: if allowed to check for connection to goal before generating all max_samples
+    :param prc: probability of checking whether can connect to goal
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
     custom_rewire = False if rewire_count is None else True
@@ -44,14 +46,6 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: in
     samples_taken = 0
 
     while True:
-        if can_connect_to_goal(X, V_rtree, x_goal, Q, r):
-            print("Testing: Can connect to goal")
-            E = connect_to_goal(V_rtree, E, x_goal)
-            break
-
-        print("Can't connect to goal yet")
-        print("Expanding tree at " + str(samples_taken) + " samples")
-
         for q in Q:
             for i in range(q[1]):
                 x_rand = X.sample_free()
@@ -87,13 +81,24 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: in
 
                 samples_taken += 1
 
-        if samples_taken > max_samples:
-            print("Could not connect to goal")
-            return False, E
+                if early_exit and random.random() < prc:
+                    print("Checking if can connect to goal at", str(samples_taken), "samples")
+                    if can_connect_to_goal(X, V_rtree, x_goal, Q, r):
+                        print("Can connect to goal")
+                        E = connect_to_goal(V_rtree, E, x_goal)
 
-        print("Finished expanding tree")
+                        return True, E
 
-    return True, E
+                if samples_taken >= max_samples:
+                    if can_connect_to_goal(X, V_rtree, x_goal, Q, r):
+                        print("Can connect to goal")
+                        E = connect_to_goal(V_rtree, E, x_goal)
+
+                        return True, E
+                    else:
+                        print("Could not connect to goal")
+
+                    return False, E
 
 
 def rrt_star_tree_path(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q: list, r: float,
@@ -110,8 +115,8 @@ def rrt_star_tree_path(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q
     :param rewire_count: number of nearby branches to rewire
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
-    V, E = rrt_star_until_connect(X, x_init, max_samples, Q, r, x_goal, rewire_count)
-    if V is None:
+    connected, E = rrt_star(X, x_init, max_samples, Q, r, x_goal, rewire_count)
+    if not connected:
         return E, []
     else:
         g = convert_edge_set_to_dict(E)
