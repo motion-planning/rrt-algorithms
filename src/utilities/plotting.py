@@ -153,7 +153,7 @@ class Plot(object):
                 x=[x_init[0]],
                 y=[x_init[1]],
                 line=dict(
-                    color="green",
+                    color="blue",
                     width=10
                 ),
                 mode="markers"
@@ -166,7 +166,7 @@ class Plot(object):
                 y=[x_init[1]],
                 z=[x_init[2]],
                 line=dict(
-                    color="green",
+                    color="blue",
                     width=10
                 ),
                 mode="markers"
@@ -187,7 +187,7 @@ class Plot(object):
                 x=[x_goal[0]],
                 y=[x_goal[1]],
                 line=dict(
-                    color="blue",
+                    color="green",
                     width=10
                 ),
                 mode="markers"
@@ -200,7 +200,7 @@ class Plot(object):
                 y=[x_goal[1]],
                 z=[x_goal[2]],
                 line=dict(
-                    color="blue",
+                    color="green",
                     width=10
                 ),
                 mode="markers"
