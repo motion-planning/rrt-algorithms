@@ -5,7 +5,7 @@ from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.rrt_star import rrt_star_tree_path
 from src.utilities.plotting import Plot
 
-Q = [(10, 10), (20, 10), (30, 10)]  # length of tree edges
+Q = [(10, 100)]  # length of tree edges
 r = 1  # length of smallest edge to check for intersection with obstacles
 # obstacles
 Obstacles = [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40, 80, 40), (60, 60, 20, 80, 80, 40),
