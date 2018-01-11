@@ -32,12 +32,12 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: in
     :param rewire_count: number of nearby branches to rewire
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
-    V = {x_init}
     custom_rewire = False if rewire_count is None else True
     p = index.Property()
     p.dimension = X.dimensions
     V_rtree = index.Index(interleaved=True, properties=p)
     V_rtree.insert(uuid.uuid4(), x_init + x_init, x_init)
+    V_count = 1
     E = set()
     P = {x_init: None}
 
@@ -58,11 +58,11 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: in
                 x_nearest = list(V_rtree.nearest(x_rand, num_results=1, objects="raw"))[0]
                 x_new = steer(X, x_nearest, x_rand, q[0])
 
-                if x_new not in V and X.collision_free(x_nearest, x_new, r):
-                    rewire_count = len(V) if not custom_rewire else rewire_count
+                if V_rtree.count(x_new) == 0 and X.collision_free(x_nearest, x_new, r):
+                    rewire_count = V_count if not custom_rewire else rewire_count
                     X_near = list(V_rtree.nearest(x_new, num_results=rewire_count, objects="raw"))
-                    V.add(x_new)
                     V_rtree.insert(uuid.uuid4(), x_new + x_new, x_new)
+                    V_count += 1
                     x_min = copy.deepcopy(x_nearest)
                     c_min = path_cost(P, x_init, x_nearest) + c(x_nearest, x_new)
 
@@ -89,13 +89,11 @@ def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: in
 
         if samples_taken > max_samples:
             print("Could not connect to goal")
-            V = None
-
-            break
+            return False, E
 
         print("Finished expanding tree")
 
-    return V, E
+    return True, E
 
 
 def rrt_star_tree_path(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q: list, r: float,

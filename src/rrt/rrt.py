@@ -26,11 +26,11 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q:
     :param x_goal: goal location
     :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
     """
-    V = {x_init}
     p = index.Property()
     p.dimension = X.dimensions
     V_rtree = index.Index(interleaved=True, properties=p)
     V_rtree.insert(uuid.uuid4(), x_init + x_init, x_init)
+    V_count = 1
     E = set()
     samples_taken = 0
 
@@ -41,28 +41,28 @@ def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q:
             break
 
         print("Can't connect to goal yet")
-        print("Expanding tree")
+        print("Expanding tree at " + str(samples_taken) + " samples")
+
         for q in Q:
             for i in range(q[1]):
                 x_rand = X.sample_free()
                 x_nearest = list(V_rtree.nearest(x_rand, num_results=1, objects="raw"))[0]
                 x_new = steer(X, x_nearest, x_rand, q[0])
 
-                if X.collision_free(x_nearest, x_new, r):
-                    V.add(x_new)
+                if V_rtree.count(x_new) == 0 and X.collision_free(x_nearest, x_new, r):
                     V_rtree.insert(uuid.uuid4(), x_new + x_new, x_new)
+                    V_count += 1
                     E.add((x_nearest, x_new))
 
                 samples_taken += 1
 
         if samples_taken > max_samples:
             print("Could not connect to goal")
-            V, E = None, None
-            break
+            return False, E
 
         print("Finished expanding tree")
 
-    return V, E
+    return True, E
 
 
 def rrt_tree_path(X: ConfigurationSpace, x_init: tuple, max_samples: int, Q: list, r: float,
