@@ -2,7 +2,7 @@
 # file 'LICENSE', which is part of this source code package.
 
 from src.configuration_space.configuration_space import ConfigurationSpace
-from src.rrt.rrt_star import rrt_star_tree_path
+from src.rrt.rrt_star import RRTStar
 from src.utilities.plotting import Plot
 
 X_dimensions = [(0, 100), (0, 100)]  # dimensions of Configuration Space
@@ -13,19 +13,20 @@ x_goal = (100, 100)  # goal location
 
 Q = [(8, 128)]  # length of tree edges
 r = 1  # length of smallest edge to check for intersection with obstacles
-max_samples = 4096  # max number of samples to take before timing out
+max_samples = 1024  # max number of samples to take before timing out
 rewire_count = 32  # optional, number of nearby branches to rewire
 prc = 0.01  # probability of checking for a connection to goal
 
 # create Configuration Space
 X = ConfigurationSpace(X_dimensions, Obstacles)
 
-# create rrt
-E, path = rrt_star_tree_path(X, x_init, max_samples, Q, r, x_goal, rewire_count, prc)
+# create rrt_search
+rrt = RRTStar(X, Q, max_samples, r, prc, rewire_count)
+path, E = rrt.rrt_star(x_init, x_goal)
 
 # plot
 plot = Plot("example_2d_rrt_star")
-plot.plot_tree(X, E)
+plot.plot_tree(X, [E])
 plot.plot_path(X, path)
 plot.plot_obstacles(X, Obstacles)
 plot.plot_start(X, x_init)

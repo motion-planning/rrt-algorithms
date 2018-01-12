@@ -1,6 +1,8 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
+from typing import List, Dict
+
 import plotly as py
 from plotly import graph_objs as go
 
@@ -22,37 +24,40 @@ class Plot(object):
         self.fig = {'data': self.data,
                     'layout': self.layout}
 
-    def plot_tree(self, X: ConfigurationSpace, P: dict):
+    def plot_tree(self, X: ConfigurationSpace, Es: List[Dict]):
         """
         Plot tree
         :param X: Configuration Space
-        :param P: all edges created of tree
+        :param Es: list of tree edge dictionaries, one dict per tree
         """
+        colors = ['darkblue', 'teal']
         if X.dimensions == 2:  # plot in 2D
-            for start, end in P.items():
-                if end is not None:
-                    trace = go.Scatter(
-                        x=[start[0], end[0]],
-                        y=[start[1], end[1]],
-                        line=dict(
-                            color="blue"
-                        ),
-                        mode="lines"
-                    )
-                    self.data.append(trace)
+            for i, P in enumerate(Es):
+                for start, end in P.items():
+                    if end is not None:
+                        trace = go.Scatter(
+                            x=[start[0], end[0]],
+                            y=[start[1], end[1]],
+                            line=dict(
+                                color=colors[i]
+                            ),
+                            mode="lines"
+                        )
+                        self.data.append(trace)
         elif X.dimensions == 3:  # plot in 3D
-            for start, end in P.items():
-                if end is not None:
-                    trace = go.Scatter3d(
-                        x=[start[0], end[0]],
-                        y=[start[1], end[1]],
-                        z=[start[2], end[2]],
-                        line=dict(
-                            color="blue"
-                        ),
-                        mode="lines"
-                    )
-                    self.data.append(trace)
+            for i, P in enumerate(Es):
+                for start, end in P.items():
+                    if end is not None:
+                        trace = go.Scatter3d(
+                            x=[start[0], end[0]],
+                            y=[start[1], end[1]],
+                            z=[start[2], end[2]],
+                            line=dict(
+                                color=colors[i]
+                            ),
+                            mode="lines"
+                        )
+                        self.data.append(trace)
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
@@ -151,7 +156,7 @@ class Plot(object):
                 x=[x_init[0]],
                 y=[x_init[1]],
                 line=dict(
-                    color="blue",
+                    color="orange",
                     width=10
                 ),
                 mode="markers"
@@ -164,7 +169,7 @@ class Plot(object):
                 y=[x_init[1]],
                 z=[x_init[2]],
                 line=dict(
-                    color="blue",
+                    color="orange",
                     width=10
                 ),
                 mode="markers"
