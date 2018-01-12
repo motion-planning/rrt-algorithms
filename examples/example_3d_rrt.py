@@ -5,15 +5,16 @@ from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.rrt import rrt_tree_path
 from src.utilities.plotting import Plot
 
-Q = [(10, 100)]  # length of tree edges
-r = 1  # length of smallest edge to check for intersection with obstacles
+X_dimensions = [(0, 100), (0, 100), (0, 100)]  # dimensions of Configuration Space
 # obstacles
 Obstacles = [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40, 80, 40), (60, 60, 20, 80, 80, 40),
              (60, 20, 20, 80, 40, 40), (60, 20, 60, 80, 40, 80), (20, 60, 60, 40, 80, 80), (60, 60, 60, 80, 80, 80)]
 x_init = (0, 0, 0)  # starting location
 x_goal = (100, 100, 100)  # goal location
-max_samples = 5000  # max number of samples to take before timing out
-X_dimensions = [(0, 100), (0, 100), (0, 100)]  # dimensions of Configuration Space
+
+Q = [(8, 128)]  # length of tree edges
+r = 1  # length of smallest edge to check for intersection with obstacles
+max_samples = 4096  # max number of samples to take before timing out
 
 # create Configuration Space
 X = ConfigurationSpace(X_dimensions, Obstacles)

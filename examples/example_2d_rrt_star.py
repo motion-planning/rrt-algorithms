@@ -5,22 +5,23 @@ from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.rrt_star import rrt_star_tree_path
 from src.utilities.plotting import Plot
 
-Q = [(10, 100)]  # length of tree edges
-r = 1  # length of smallest edge to check for intersection with obstacles
+X_dimensions = [(0, 100), (0, 100)]  # dimensions of Configuration Space
 # obstacles
 Obstacles = [(20, 20, 40, 40), (20, 60, 40, 80), (60, 20, 80, 40), (60, 60, 80, 80)]
 x_init = (0, 0)  # starting location
 x_goal = (100, 100)  # goal location
-n = 100  # number of samples to take each iteration
-rewire_count = 4  # optional, number of nearby branches to rewire
-max_samples = 5000  # max number of samples to take before timing out
-X_dimensions = [(0, 100), (0, 100)]  # dimensions of Configuration Space
+
+Q = [(8, 128)]  # length of tree edges
+r = 1  # length of smallest edge to check for intersection with obstacles
+max_samples = 4096  # max number of samples to take before timing out
+rewire_count = 32  # optional, number of nearby branches to rewire
+prc = 0.01  # probability of checking for a connection to goal
 
 # create Configuration Space
 X = ConfigurationSpace(X_dimensions, Obstacles)
 
 # create rrt
-E, path = rrt_star_tree_path(X, x_init, max_samples, Q, r, x_goal, rewire_count)
+E, path = rrt_star_tree_path(X, x_init, max_samples, Q, r, x_goal, rewire_count, prc)
 
 # plot
 plot = Plot("example_2d_rrt_star")
