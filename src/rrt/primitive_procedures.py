@@ -64,6 +64,27 @@ def can_connect_to_goal(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, Q:
     return False
 
 
+def can_connect_to_tree(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, Q: list, r: float) -> bool:
+    """
+    Check if the goal can be connected to the graph
+    :param X: Configuration Space
+    :param V_rtree: rtree of all Vertices
+    :param x_goal: goal location we want to add
+    :param Q: length of edges to add
+    :param r: resolution of points to sample along edge when checking for collisions
+    :return: True if can be added, False otherwise
+    """
+    x_nearest = list(V_rtree.nearest(x_goal, num_results=1, objects="raw"))[0]
+    distance = distance_between_points(x_nearest, x_goal)
+    if distance > max(Q, key=lambda x: x[1])[1]:  # check if close enough
+        return False
+
+    if X.collision_free(x_nearest, x_goal, r):  # check if obstacle-free
+        return True
+
+    return False
+
+
 def connect_to_goal(V_rtree: index, P: dict, x_goal: tuple) -> dict:
     """
     Connect x_goal to graph (does not check if this should be possible, for that use: can_connect_to_goal)
