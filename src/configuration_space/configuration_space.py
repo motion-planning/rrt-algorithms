@@ -67,9 +67,11 @@ class ConfigurationSpace(object):
         :return: True if line segment does not intersect an obstacle, False otherwise
         """
         dist = distance_between_points(start, end)
+        # divide line between points into equidistant points at given resolution
         dim_linspaces = [np.linspace(s_i, e_i, int(math.ceil(dist / r))) for s_i, e_i in zip(start, end)]
         points = [point for point in zip(*dim_linspaces)]
         for point in points:
+            # check each point to see if it lies within an obstacle
             if not self.obstacle_free(point):
                 return False
 
