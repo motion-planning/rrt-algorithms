@@ -22,39 +22,37 @@ class Plot(object):
         self.fig = {'data': self.data,
                     'layout': self.layout}
 
-    def plot_tree(self, X: ConfigurationSpace, E: set):
+    def plot_tree(self, X: ConfigurationSpace, P: dict):
         """
         Plot tree
         :param X: Configuration Space
-        :param E: all edges created of tree
+        :param P: all edges created of tree
         """
         if X.dimensions == 2:  # plot in 2D
-            for e in E:
-                start = e[0]
-                end = e[1]
-                trace = go.Scatter(
-                    x=[start[0], end[0]],
-                    y=[start[1], end[1]],
-                    line=dict(
-                        color="blue"
-                    ),
-                    mode="lines"
-                )
-                self.data.append(trace)
+            for start, end in P.items():
+                if end is not None:
+                    trace = go.Scatter(
+                        x=[start[0], end[0]],
+                        y=[start[1], end[1]],
+                        line=dict(
+                            color="blue"
+                        ),
+                        mode="lines"
+                    )
+                    self.data.append(trace)
         elif X.dimensions == 3:  # plot in 3D
-            for e in E:
-                start = e[0]
-                end = e[1]
-                trace = go.Scatter3d(
-                    x=[start[0], end[0]],
-                    y=[start[1], end[1]],
-                    z=[start[2], end[2]],
-                    line=dict(
-                        color="blue"
-                    ),
-                    mode="lines"
-                )
-                self.data.append(trace)
+            for start, end in P.items():
+                if end is not None:
+                    trace = go.Scatter3d(
+                        x=[start[0], end[0]],
+                        y=[start[1], end[1]],
+                        z=[start[2], end[2]],
+                        line=dict(
+                            color="blue"
+                        ),
+                        mode="lines"
+                    )
+                    self.data.append(trace)
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 

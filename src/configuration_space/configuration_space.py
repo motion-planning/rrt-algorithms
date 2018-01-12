@@ -67,41 +67,13 @@ class ConfigurationSpace(object):
         :return: True if line segment does not intersect an obstacle, False otherwise
         """
         dist = distance_between_points(start, end)
-        j = 2
-        already_checked = set()  # points along edge that have already been checked for collisions
-        # perform iterative deepening search along edge
-        while j <= dist / r:
-            safe, already_checked = self.check_along_edge(start, end, j, already_checked)
-            if not safe:
-                return False
-
-            j *= 2
-
-        # check at maximum user-defined resolution
-        if j / 2 != r:
-            safe, already_checked = self.check_along_edge(start, end, int(math.ceil(dist / r)), already_checked)
-            if not safe:
+        dim_linspaces = [np.linspace(s_i, e_i, int(math.ceil(dist / r))) for s_i, e_i in zip(start, end)]
+        points = [point for point in zip(*dim_linspaces)]
+        for point in points:
+            if not self.obstacle_free(point):
                 return False
 
         return True
-
-    def check_along_edge(self, start, end, j, already_checked):
-        """
-        Check points along an edge for collision
-        :param start: starting point of line
-        :param end: ending point of line
-        :param j: number of points to use when discretizing line
-        :param already_checked: set of points that have already been queried
-        :return: True if line segment does not intersect an obstacle, False otherwise, set of points that were queried
-        """
-        dim_linspaces = [np.linspace(s_i, e_i, j) for s_i, e_i in zip(start, end)]
-        points = set([point for point in zip(*dim_linspaces)])
-        points = points - already_checked  # remove points that have already been queried
-        already_checked = already_checked | points  # update queried points
-        if not all(self.obstacle_free(point) for point in points):
-            return False, already_checked
-
-        return True, already_checked
 
     def sample(self) -> tuple:
         """

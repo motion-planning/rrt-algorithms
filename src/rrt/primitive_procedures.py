@@ -64,15 +64,34 @@ def can_connect_to_goal(X: ConfigurationSpace, V_rtree: index, x_goal: tuple, Q:
     return False
 
 
-def connect_to_goal(V_rtree: index, E: set, x_goal: tuple) -> set:
+def connect_to_goal(V_rtree: index, P: dict, x_goal: tuple) -> dict:
     """
     Connect x_goal to graph (does not check if this should be possible, for that use: can_connect_to_goal)
     :param V_rtree: rtree of all Vertices
-    :param E: set of all Edges in form: vertex: [neighbor_1, neighbor_2, ...]
+    :param P: dict of all Edges in form: P[child] = parent
     :param x_goal: goal location to add
-    :return: updated E
+    :return: updated P
     """
     x_nearest = list(V_rtree.nearest(x_goal, num_results=1, objects="raw"))[0]
-    E.add((x_nearest, x_goal))
+    P[x_goal] = x_nearest
 
-    return E
+    return P
+
+
+def reconstruct_path(P: dict, x_init: tuple, x_goal: tuple) -> list:
+    """
+    Reconstruct path from start to goal
+    :param P: dict of all Edges in form: P[child] = parent
+    :param x_init: starting location
+    :param x_goal: goal location
+    :return: sequence of vertices from start to goal
+    """
+    path = [x_goal]
+    current = x_goal
+    while not P[current] == x_init:
+        path.append(P[current])
+        current = P[current]
+    path.append(x_init)
+    path.reverse()
+
+    return path
