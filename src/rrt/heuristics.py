@@ -6,7 +6,6 @@ from src.utilities.geometry import distance_between_points
 
 def cost_to_go(a: tuple, b: tuple) -> float:
     """
-    Heuristic used for A*
     :param a: current location
     :param b: next location
     :return: estimated segment_cost-to-go from a to b
