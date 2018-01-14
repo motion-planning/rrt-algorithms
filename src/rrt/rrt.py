@@ -1,3 +1,5 @@
+from rtree import index
+
 from src.configuration_space.configuration_space import ConfigurationSpace
 
 
@@ -16,3 +18,10 @@ class RRT(object):
         self.Q = Q
         self.r = r
         self.prc = prc
+
+        p = index.Property()
+        p.dimension = self.X.dimensions
+        self.V = index.Index(interleaved=True, properties=p)
+        self.V_count = 1
+        self.samples_taken = 0
+        self.E = {}

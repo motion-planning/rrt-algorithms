@@ -26,7 +26,7 @@ rrt = RRTStar(X, Q, max_samples, r, prc, rewire_count)
 path, E = rrt.rrt_star(x_init, x_goal)
 
 # plot
-plot = Plot("example_3d_rrt_star")
+plot = Plot("rrt_star_3d")
 plot.plot_tree(X, [E])
 plot.plot_path(X, path)
 plot.plot_obstacles(X, Obstacles)

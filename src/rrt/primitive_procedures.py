@@ -99,19 +99,21 @@ def connect_to_goal(V_rtree: index, P: dict, x_goal: tuple) -> dict:
     return P
 
 
-def reconstruct_path(P: dict, x_init: tuple, x_goal: tuple) -> list:
+def reconstruct_path(E: dict, x_init: tuple, x_goal: tuple) -> list:
     """
     Reconstruct path from start to goal
-    :param P: dict of all Edges in form: P[child] = parent
+    :param E: dict of all Edges in form: E[child] = parent
     :param x_init: starting location
     :param x_goal: goal location
     :return: sequence of vertices from start to goal
     """
     path = [x_goal]
     current = x_goal
-    while not P[current] == x_init:
-        path.append(P[current])
-        current = P[current]
+    if x_init == x_goal:
+        return path
+    while not E[current] == x_init:
+        path.append(E[current])
+        current = E[current]
     path.append(x_init)
     path.reverse()
 

@@ -82,7 +82,6 @@ class RRTStar(RRT):
                         for x_near, c_near in L_near:
                             if path_cost(E, x_init, x_new) + c_near < path_cost(E, x_init, x_near):
                                 if self.X.collision_free(x_near, x_new, self.r):
-                                    E.pop(x_near)
                                     E[x_near] = x_new
 
                     if self.prc and random.random() < self.prc:  # probabilistically check if solution found

@@ -3,8 +3,6 @@
 import random
 import uuid
 
-from rtree import index
-
 from src.configuration_space.configuration_space import ConfigurationSpace
 from src.rrt.primitive_procedures import can_connect_to_goal, reconstruct_path
 from src.rrt.primitive_procedures import connect_to_goal
@@ -32,46 +30,43 @@ class RRTSearch(RRT):
         :param x_goal: goal location
         :return: list representation of path, dict representing edges of tree in form E[child] = parent
         """
-        p = index.Property()
-        p.dimension = self.X.dimensions
-        V = index.Index(interleaved=True, properties=p)
-        V.insert(uuid.uuid4(), x_init + x_init, x_init)
-        V_count = 1
-        E = {x_init: None}
-
-        samples_taken = 0
+        self.V.insert(1, x_init + x_init, x_init)
+        self.E = {x_init: None}
 
         while True:
             for q in self.Q:  # iterate over different edge lengths
                 for i in range(q[1]):  # iterate over number of edges of given length to add
                     x_rand = self.X.sample_free()
-                    x_nearest = list(V.nearest(x_rand, num_results=1, objects="raw"))[0]
+                    x_nearest = list(self.V.nearest(x_rand, num_results=1, objects="raw"))[0]
                     x_new = steer(self.X, x_nearest, x_rand, q[0])
+                    # check if new point is in X_free and not already in V
+                    if not self.X.obstacle_free(x_new) or not self.V.count(x_new) == 0:
+                        continue
 
-                    if V.count(x_new) == 0 and self.X.collision_free(x_nearest, x_new, self.r):
-                        V.insert(uuid.uuid4(), x_new + x_new, x_new)
-                        V_count += 1
-                        E[x_new] = x_nearest
+                    if self.V.count(x_new) == 0 and self.X.collision_free(x_nearest, x_new, self.r):
+                        self.V.insert(uuid.uuid4(), x_new + x_new, x_new)
+                        self.V_count += 1
+                        self.E[x_new] = x_nearest
 
-                    samples_taken += 1
+                        self.samples_taken += 1
 
                     if self.prc and random.random() < self.prc:  # randomly check if solution found
-                        print("Checking if can connect to goal at", str(samples_taken), "samples")
-                        if can_connect_to_goal(self.X, V, x_goal, self.Q, self.r):
+                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                        if can_connect_to_goal(self.X, self.V, x_goal, self.Q, self.r):
                             print("Can connect to goal")
-                            E = connect_to_goal(V, E, x_goal)
-                            path = reconstruct_path(E, x_init, x_goal)
+                            self.E = connect_to_goal(self.V, self.E, x_goal)
+                            path = reconstruct_path(self.E, x_init, x_goal)
 
-                            return path, E
+                            return path, self.E
 
-                    if samples_taken >= self.max_samples:
-                        if can_connect_to_goal(self.X, V, x_goal, self.Q, self.r):
+                    if self.samples_taken >= self.max_samples:
+                        if can_connect_to_goal(self.X, self.V, x_goal, self.Q, self.r):
                             print("Can connect to goal")
-                            E = connect_to_goal(V, E, x_goal)
-                            path = reconstruct_path(E, x_init, x_goal)
+                            self.E = connect_to_goal(self.V, self.E, x_goal)
+                            path = reconstruct_path(self.E, x_init, x_goal)
 
-                            return path, E
+                            return path, self.E
                         else:
                             print("Could not connect to goal")
 
-                            return None, E
+                        return None, self.E

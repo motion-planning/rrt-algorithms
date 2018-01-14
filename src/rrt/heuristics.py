@@ -13,17 +13,17 @@ def cost_to_go(a: tuple, b: tuple) -> float:
     return distance_between_points(a, b)
 
 
-def path_cost(P: dict, x_init: tuple, x: tuple) -> float:
+def path_cost(E: dict, x_init: tuple, x: tuple) -> float:
     """
     Cost of the unique path from x_init to x
-    :param P: parents of children, in form of child: parent
+    :param E: parents of children, in form of child: parent
     :param x_init: initial location
     :param x: goal location
     :return: segment_cost of unique path from x_init to x
     """
     cost = 0
     while not x == x_init:
-        p = P[x]
+        p = E[x]
         cost += distance_between_points(x, p)
         x = p
 
