@@ -36,6 +36,7 @@ class RRTStarBidirectional(RRT):
         """
         p = index.Property()
         p.dimension = self.X.dimensions
+
         # tree a
         V_a = index.Index(interleaved=True, properties=p)
         V_a.insert(uuid.uuid4(), x_init + x_init, x_init)
@@ -60,6 +61,7 @@ class RRTStarBidirectional(RRT):
                     samples_taken += 1
                     x_nearest = list(V_a.nearest(x_rand, num_results=1, objects="raw"))[0]
                     x_new = steer(self.X, x_nearest, x_rand, q[0])
+                    # check if new point is in X_free and not already in V
                     if not self.X.obstacle_free(x_new) or not V_a.count(x_new) == 0:
                         continue
 
@@ -87,26 +89,25 @@ class RRTStarBidirectional(RRT):
                         for x_near, c_near in L_near:
                             if path_cost(E_a, x_init, x_new) + c_near < path_cost(E_a, x_init, x_near):
                                 if self.X.collision_free(x_near, x_new, self.r):
-                                    E_a.pop(x_near)
                                     E_a[x_near] = x_new
 
                         # nearby vertices from opposite tree and cost-to-come
                         rewire_count = V_b_count if self.rewire_count is not None else min(V_b_count, self.rewire_count)
                         X_near = list(V_b.nearest(x_new, num_results=rewire_count, objects="raw"))
                         L_near = [(x_near, path_cost(E_b, x_goal, x_near) +
-                                   segment_cost(x_near, x_new) +
-                                   path_cost(E_a, x_init, x_new)) for x_near in X_near]
+                                   segment_cost(x_near, x_new)) for x_near in X_near]
                         # noinspection PyTypeChecker
                         L_near.sort(key=itemgetter(1))
 
                         # check nearby vertices for total cost and connect shortest valid edge
                         # this results in both trees being connected
                         for x_near, c_near in L_near:
-                            if c_near < c_best:
+                            c_tent = c_near + path_cost(E_a, x_init, x_new)
+                            if c_tent < c_best:
                                 if self.X.collision_free(x_near, x_new, self.r):
                                     V_b_count += 1
                                     E_b[x_new] = x_near
-                                    c_best = c_near
+                                    c_best = c_tent
                                     sigma_a = reconstruct_path(E_a, x_init, x_new)
                                     sigma_b = reconstruct_path(E_b, x_goal, x_new)
                                     del sigma_b[-1]

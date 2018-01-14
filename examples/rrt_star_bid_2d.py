@@ -2,7 +2,7 @@
 # file 'LICENSE', which is part of this source code package.
 
 from src.configuration_space.configuration_space import ConfigurationSpace
-from src.rrt.rrt_star_bidirectional import RRTStarBidirectional
+from src.rrt.rrt_star_bid import RRTStarBidirectional
 from src.utilities.plotting import Plot
 
 X_dimensions = [(0, 100), (0, 100)]  # dimensions of Configuration Space
@@ -25,7 +25,7 @@ rrt = RRTStarBidirectional(X, Q, max_samples, r, prc, rewire_count)
 path, E_a, E_b = rrt.rrt_star_bidirectional(x_init, x_goal)
 
 # plot
-plot = Plot("example_2d_rrt_star_bidirectional")
+plot = Plot("rrt_star_bid_2d")
 plot.plot_tree(X, [E_a, E_b])
 plot.plot_path(X, path)
 plot.plot_obstacles(X, Obstacles)
