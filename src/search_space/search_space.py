@@ -10,10 +10,10 @@ from rtree import index
 from src.utilities.geometry import distance_between_points
 
 
-class ConfigurationSpace(object):
-    def __init__(self, dimension_lengths: list, O: list = None):
+class SearchSpace(object):
+    def __init__(self, dimension_lengths, O=None):
         """
-        Initialize Configuration Space
+        Initialize Search Space
         :param dimension_lengths: range of each dimension
         :param O: list of obstacles
         """
@@ -40,7 +40,7 @@ class ConfigurationSpace(object):
         else:
             self.obs = index.Index(obstacle_generator(O), interleaved=True, properties=p)
 
-    def obstacle_free(self, x: tuple) -> bool:
+    def obstacle_free(self, x):
         """
         Check if a location resides inside of an obstacle
         :param x: location to check
@@ -48,7 +48,7 @@ class ConfigurationSpace(object):
         """
         return self.obs.count(x) == 0
 
-    def sample_free(self) -> tuple:
+    def sample_free(self):
         """
         Sample a location within X_free
         :return: random location within X_free
@@ -58,7 +58,7 @@ class ConfigurationSpace(object):
             if self.obstacle_free(x):
                 return x
 
-    def collision_free(self, start: tuple, end: tuple, r: float) -> bool:
+    def collision_free(self, start, end, r):
         """
         Check if a line segment intersects an obstacle
         :param start: starting point of line
@@ -69,26 +69,24 @@ class ConfigurationSpace(object):
         dist = distance_between_points(start, end)
         # divide line between points into equidistant points at given resolution
         dim_linspaces = [np.linspace(s_i, e_i, int(math.ceil(dist / r))) for s_i, e_i in zip(start, end)]
-        points = [point for point in zip(*dim_linspaces)]
-        for point in points:
+
+        for point in zip(*dim_linspaces):
             # check each point to see if it lies within an obstacle
             if not self.obstacle_free(point):
                 return False
 
         return True
 
-    def sample(self) -> tuple:
+    def sample(self):
         """
         Return a random location within X
         :return: random location within X (not necessarily X_free)
         """
-        x = []
+        x = np.empty(len(self.dimension_lengths), np.float)
         for dimension in range(len(self.dimension_lengths)):
-            x.append(random.uniform(self.dimension_lengths[dimension][0], self.dimension_lengths[dimension][1]))
+            x[dimension] = random.uniform(self.dimension_lengths[dimension][0], self.dimension_lengths[dimension][1])
 
-        x = tuple(x)
-
-        return x
+        return tuple(x)
 
 
 def obstacle_generator(obstacles):

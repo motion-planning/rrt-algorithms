@@ -1,139 +1,127 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
+
 import random
-import uuid
-from operator import itemgetter
 
-from rtree import index
-
-from src.configuration_space.configuration_space import ConfigurationSpace
-from src.rrt.heuristics import segment_cost, path_cost, cost_to_go
-from src.rrt.primitive_procedures import reconstruct_path
-from src.rrt.primitive_procedures import steer
-from src.rrt.rrt import RRT
+from src.rrt.heuristics import path_cost
+from src.rrt.rrt_star import RRTStar
 
 
-class RRTStarBidirectional(RRT):
-    def __init__(self, X: ConfigurationSpace, Q: list, max_samples: int, r: float, prc: float,
-                 rewire_count: int = None):
+class RRTStarBidirectional(RRTStar):
+    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
         """
         Bidirectional RRT* Search
-        :param X: Configuration Space
+        :param X: Search Space
         :param Q: list of lengths of edges added to tree
+        :param x_init: tuple, initial location
+        :param x_goal: tuple, goal location
         :param max_samples: max number of samples to take
         :param r: resolution of points to sample along edge when checking for collisions
         :param prc: probability of checking whether there is a solution
         :param rewire_count: number of nearby vertices to rewire
         """
-        super().__init__(X, Q, max_samples, r, prc)
-        self.rewire_count = rewire_count
+        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
+        self.sigma_best = None  # best solution thus far
+        self.swapped = False
 
-    def rrt_star_bidirectional(self, x_init: tuple, x_goal: tuple) -> (set, dict):
+    def connect_trees(self, a, b, x_new, L_near):
         """
-        :param x_init: initial location
-        :param x_goal: goal location
+        Check nearby vertices for total cost and connect shortest valid edge if possible
+        This results in both trees being connected
+        :param a: first tree to connect
+        :param b: second tree to connect
+        :param x_new: new vertex to add
+        :param L_near: nearby vertices
+        """
+        for x_near, c_near in L_near:
+            c_tent = c_near + path_cost(self.trees[a].E, self.x_init, x_new)
+            if c_tent < self.c_best and self.X.collision_free(x_near, x_new, self.r):
+                self.trees[b].V_count += 1
+                self.trees[b].E[x_new] = x_near
+                self.c_best = c_tent
+                sigma_a = self.reconstruct_path(a, self.x_init, x_new)
+                sigma_b = self.reconstruct_path(b, self.x_goal, x_new)
+                del sigma_b[-1]
+                sigma_b.reverse()
+                self.sigma_best = sigma_a + sigma_b
+
+                break
+
+    def swap_trees(self):
+        """
+        Swap trees and start/goal
+        """
+        # swap trees
+        self.trees[0], self.trees[1] = self.trees[1], self.trees[0]
+        # swap start/goal
+        self.x_init, self.x_goal = self.x_goal, self.x_init
+        self.swapped = not self.swapped
+
+    def unswap(self):
+        """
+        Check if trees have been swapped and unswap
+        Reverse path if needed to correspond with swapped trees
+        """
+        if self.swapped:
+            self.swap_trees()
+        if self.sigma_best[0] is not self.x_init:
+            self.sigma_best.reverse()
+
+    def rrt_star_bidirectional(self):
+        """
+        Bidirectional RRT*
         :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
         """
-        p = index.Property()
-        p.dimension = self.X.dimensions
-
         # tree a
-        V_a = index.Index(interleaved=True, properties=p)
-        V_a.insert(uuid.uuid4(), x_init + x_init, x_init)
-        V_a_count = 1
-        E_a = {x_init: None}
+        self.add_vertex(0, self.x_init)
+        self.add_edge(0, self.x_init, None)
 
         # tree b
-        V_b = index.Index(interleaved=True, properties=p)
-        V_b.insert(uuid.uuid4(), x_goal + x_goal, x_goal)
-        V_b_count = 1
-        E_b = {x_goal: None}
-
-        c_best = float('inf')  # length of best solution thus far
-        sigma_best = None  # best solution thus far
-
-        samples_taken = 0
+        self.add_tree()
+        self.add_vertex(1, self.x_goal)
+        self.add_edge(1, self.x_goal, None)
 
         while True:
             for q in self.Q:  # iterate over different edge lengths
                 for i in range(q[1]):  # iterate over number of edges of given length to add
-                    x_rand = self.X.sample_free()
-                    samples_taken += 1
-                    x_nearest = list(V_a.nearest(x_rand, num_results=1, objects="raw"))[0]
-                    x_new = steer(self.X, x_nearest, x_rand, q[0])
-                    # check if new point is in X_free and not already in V
-                    if not self.X.obstacle_free(x_new) or not V_a.count(x_new) == 0:
+                    x_new, x_nearest = self.new_and_near(0, q)
+                    if x_new is None:
                         continue
 
                     # get nearby vertices and cost-to-come
-                    rewire_count = V_a_count if self.rewire_count is not None else min(V_a_count, self.rewire_count)
-                    X_near = list(V_a.nearest(x_new, num_results=rewire_count, objects="raw"))
-                    L_near = [(x_near, path_cost(E_a, x_init, x_near) +
-                               segment_cost(x_near, x_new)) for x_near in
-                              X_near]
-                    # noinspection PyTypeChecker
-                    L_near.sort(key=itemgetter(1))
+                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
                     # check nearby vertices for total cost and connect shortest valid edge
-                    for x_near, c_near in L_near:
-                        if c_near + cost_to_go(x_near, x_goal) < c_best:
-                            if self.X.collision_free(x_near, x_new, self.r):
-                                V_a.insert(uuid.uuid4(), x_new + x_new, x_new)
-                                V_a_count += 1
-                                E_a[x_new] = x_near
+                    self.connect_shortest_valid(0, x_new, L_near)
 
-                                break
-
-                    # rewire tree
-                    if x_new in E_a:
-                        for x_near, c_near in L_near:
-                            if path_cost(E_a, x_init, x_new) + c_near < path_cost(E_a, x_init, x_near):
-                                if self.X.collision_free(x_near, x_new, self.r):
-                                    E_a[x_near] = x_new
+                    if x_new in self.trees[0].E:
+                        # rewire tree
+                        self.rewire(0, x_new, L_near)
 
                         # nearby vertices from opposite tree and cost-to-come
-                        rewire_count = V_b_count if self.rewire_count is not None else min(V_b_count, self.rewire_count)
-                        X_near = list(V_b.nearest(x_new, num_results=rewire_count, objects="raw"))
-                        L_near = [(x_near, path_cost(E_b, x_goal, x_near) +
-                                   segment_cost(x_near, x_new)) for x_near in X_near]
-                        # noinspection PyTypeChecker
-                        L_near.sort(key=itemgetter(1))
+                        L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
-                        # check nearby vertices for total cost and connect shortest valid edge
-                        # this results in both trees being connected
-                        for x_near, c_near in L_near:
-                            c_tent = c_near + path_cost(E_a, x_init, x_new)
-                            if c_tent < c_best:
-                                if self.X.collision_free(x_near, x_new, self.r):
-                                    V_b_count += 1
-                                    E_b[x_new] = x_near
-                                    c_best = c_tent
-                                    sigma_a = reconstruct_path(E_a, x_init, x_new)
-                                    sigma_b = reconstruct_path(E_b, x_goal, x_new)
-                                    del sigma_b[-1]
-                                    sigma_b.reverse()
-                                    sigma_best = sigma_a + sigma_b
-
-                                    break
+                        self.connect_trees(0, 1, x_new, L_near)
 
                     if self.prc and random.random() < self.prc:  # probabilistically check if solution found
-                        print("Checking if can connect to goal at", str(samples_taken), "samples")
-                        if sigma_best is not None:
+                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                        if self.sigma_best is not None:
                             print("Can connect to goal")
 
-                            return sigma_best, E_a, E_b
+                            self.unswap()
 
-                    if samples_taken >= self.max_samples:
-                        if sigma_best is not None:
+                            return self.sigma_best
+
+                    if self.samples_taken >= self.max_samples:
+                        self.unswap()
+
+                        if self.sigma_best is not None:
                             print("Can connect to goal")
 
-                            return sigma_best, E_a, E_b
+                            return self.sigma_best
                         else:
                             print("Could not connect to goal")
 
-                        return sigma_best, E_a, E_b
+                        return self.sigma_best
 
-            V_a, V_b = V_b, V_a
-            V_a_count, V_b_count = V_b_count, V_a_count
-            E_a, E_b = E_b, E_a
-            x_init, x_goal = x_goal, x_init
+            self.swap_trees()

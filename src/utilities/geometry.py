@@ -4,7 +4,7 @@
 import math
 
 
-def distance_between_points(a: tuple, b: tuple) -> float:
+def distance_between_points(a, b):
     """
     Return the Euclidean distance between two points
     :param a: first point
@@ -15,6 +15,4 @@ def distance_between_points(a: tuple, b: tuple) -> float:
     for a_i, b_i in zip(a, b):
         distance += (a_i - b_i) ** 2
 
-    distance = math.sqrt(distance)
-
-    return distance
+    return math.sqrt(distance)
