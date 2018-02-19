@@ -70,12 +70,9 @@ class SearchSpace(object):
         # divide line between points into equidistant points at given resolution
         dim_linspaces = [np.linspace(s_i, e_i, int(math.ceil(dist / r))) for s_i, e_i in zip(start, end)]
 
-        for point in zip(*dim_linspaces):
-            # check each point to see if it lies within an obstacle
-            if not self.obstacle_free(point):
-                return False
+        coll_free = all(map(self.obstacle_free, zip(*dim_linspaces)))
 
-        return True
+        return coll_free
 
     def sample(self):
         """
