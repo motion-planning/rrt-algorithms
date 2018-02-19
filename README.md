@@ -10,10 +10,10 @@ Collection of rrt-based algorithms that scale to n-dimensions
 - [Plotly](https://plot.ly/python/getting-started/) (only needed for plotting)
 
 ## Usage
-Define an n-dimensional configuration space, and n-dimensional obstacles within that space. Assign start and goal locations as well as the number of iterations to expand the tree before testing for connectivity with the goal, and the max number of overall iterations.
+Define an n-dimensional Search Space, and n-dimensional obstacles within that space. Assign start and goal locations as well as the number of iterations to expand the tree before testing for connectivity with the goal, and the max number of overall iterations.
 
-### Configuration Space
-Assign bounds to configuration space in form: `[(x_lower, x_upper), (y_lower, y_upper), ...]`
+### Search Space
+Assign bounds to Search Space in form: `[(x_lower, x_upper), (y_lower, y_upper), ...]`
 
 ### Start and Goal
 Points represented by tuples of form: `(x, y, ...)`
@@ -30,10 +30,14 @@ Assign resolution of edges:
 
 ### Examples
 Visualization examples can be found for rrt and rrt* in both 2 and 3 dimensions.
-- [2D RRT](https://plot.ly/~szanlongo/37/plot/)
-- [2D RRT*](https://plot.ly/~szanlongo/39/plot/)
-- [3D RRT](https://plot.ly/~szanlongo/41/plot/)
-- [3D RRT*](https://plot.ly/~szanlongo/43/plot/)
+- [2D RRT](https://plot.ly/~szanlongo/79/plot/)
+- [3D RRT](https://plot.ly/~szanlongo/81/plot/)
+- [2D RRT*](https://plot.ly/~szanlongo/83/plot/)
+- [3D RRT*](https://plot.ly/~szanlongo/89/plot/)
+- [2D Bidirectional RRT*](https://plot.ly/~szanlongo/85/plot/)
+- [3D Bidirectional RRT*](https://plot.ly/~szanlongo/87/plot/)
+- [2D Heuristic Bidirectional RRT*](https://plot.ly/~szanlongo/91/plot/)
+- [3D Heuristic Bidirectional RRT*](https://plot.ly/~szanlongo/93/plot/)
 
 ## Contributing
 

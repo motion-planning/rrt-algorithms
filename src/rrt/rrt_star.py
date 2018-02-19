@@ -1,151 +1,121 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
+import random
+from operator import itemgetter
 
-import copy
-import uuid
-
-from rtree import index
-
-from src.a_star.a_star import a_star_search
-from src.a_star.a_star import reconstruct_path
-from src.configuration_space.configuration_space import ConfigurationSpace
-from src.rrt.primitive_procedures import can_connect_to_goal
-from src.rrt.primitive_procedures import connect_to_goal
-from src.rrt.primitive_procedures import steer
-from src.utilities.conversion import convert_edge_set_to_dict
-from src.utilities.geometry import distance_between_points
+from src.rrt.heuristics import cost_to_go
+from src.rrt.heuristics import segment_cost, path_cost
+from src.rrt.rrt import RRT
 
 
-def rrt_star_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
-                           x_goal: tuple, rewire_count: int = None, ) -> (set, dict):
-    """
-    Create and return a Rapidly-exploring Random Tree
-    https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
-    Based on algorithm found in: Incremental Sampling-based Algorithms for Optimal Motion Planning
-    http://roboticsproceedings.org/rss06/p34.pdf
-    :param X: Configuration Space
-    :param x_init: initial location
-    :param n: number of samples to take between iterations
-    :param max_samples: max number of samples to take
-    :param q: length of new edges added to tree
-    :param r: resolution of points to sample along edge when checking for collisions
-    :param x_goal: goal location
-    :param rewire_count: number of nearby branches to rewire
-    :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
-    """
-    V = {x_init}
-    custom_rewire = False if rewire_count is None else True
-    p = index.Property()
-    p.dimension = X.dimensions
-    V_rtree = index.Index(interleaved=True, properties=p)
-    V_rtree.insert(uuid.uuid4(), x_init + x_init, x_init)
-    E = set()
-    P = {x_init: None}
+class RRTStar(RRT):
+    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
+        """
+        RRT* Search
+        :param X: Search Space
+        :param Q: list of lengths of edges added to tree
+        :param x_init: tuple, initial location
+        :param x_goal: tuple, goal location
+        :param max_samples: max number of samples to take
+        :param r: resolution of points to sample along edge when checking for collisions
+        :param prc: probability of checking whether there is a solution
+        :param rewire_count: number of nearby vertices to rewire
+        """
+        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc)
+        self.rewire_count = rewire_count if rewire_count is not None else 0
+        self.c_best = float('inf')  # length of best solution thus far
 
-    samples_taken = 0
+    def get_nearby_vertices(self, tree, x_init, x_new):
+        """
+        Get nearby vertices to new vertex and their associated costs, number defined by rewire count
+        :param tree: tree in which to search
+        :param x_init: starting vertex used to calculate path cost
+        :param x_new: vertex around which to find nearby vertices
+        :return: list of nearby vertices and their costs, sorted in ascending order by cost
+        """
+        X_near = self.nearby(tree, x_new, self.current_rewire_count(tree))
+        L_near = [(x_near, path_cost(self.trees[tree].E, x_init, x_near) + segment_cost(x_near, x_new)) for
+                  x_near in X_near]
+        # noinspection PyTypeChecker
+        L_near.sort(key=itemgetter(0))
 
-    while True:
-        if can_connect_to_goal(X, V_rtree, x_goal, q, r):
-            print("Testing: Can connect to goal")
-            E = connect_to_goal(V_rtree, E, x_goal)
-            break
+        return L_near
 
-        print("Can't connect to goal yet")
-        print("Expanding tree at " + str(samples_taken) + " samples")
+    def rewire(self, tree, x_new, L_near):
+        """
+        Rewire tree to shorten edges if possible
+        Only rewires vertices according to rewire count
+        :param tree: int, tree to rewire
+        :param x_new: tuple, newly added vertex
+        :param L_near: list of nearby vertices used to rewire
+        :return:
+        """
+        for x_near, c_near in L_near:
+            curr_cost = path_cost(self.trees[tree].E, self.x_init, x_near)
+            tent_cost = path_cost(self.trees[tree].E, self.x_init, x_new) + c_near
 
-        for i in range(n):
-            x_rand = X.sample_free()
-            x_nearest = list(V_rtree.nearest(x_rand, num_results=1, objects="raw"))[0]
-            x_new = steer(X, x_nearest, x_rand, q)
+            if tent_cost < curr_cost and self.X.collision_free(x_near, x_new, self.r):
+                self.trees[tree].E[x_near] = x_new
 
-            if X.collision_free(x_nearest, x_new, r):
-                rewire_count = len(V) if not custom_rewire else rewire_count
-                X_near = list(V_rtree.nearest(x_new, num_results=rewire_count, objects="raw"))
-                V.add(x_new)
-                V_rtree.insert(uuid.uuid4(), x_new + x_new, x_new)
-                x_min = copy.deepcopy(x_nearest)
-                c_min = path_cost(P, x_init, x_nearest) + c(x_nearest, x_new)
+    def connect_shortest_valid(self, tree, x_new, L_near):
+        """
+        Connect to nearest vertex that has an unobstructed path
+        :param tree: int, tree being added to
+        :param x_new: tuple, vertex being added
+        :param L_near: list of nearby vertices
+        """
+        # check nearby vertices for total cost and connect shortest valid edge
+        for x_near, c_near in L_near:
+            if c_near + cost_to_go(x_near, self.x_goal) < self.c_best and self.connect_to_point(tree, x_near, x_new):
+                break
 
-                for x_near in X_near:  # connect along a min-cost path
-                    if path_cost(P, x_init, x_near) + c(x_near, x_new) < c_min and X.collision_free(x_near, x_new, r):
-                        x_min = copy.deepcopy(x_near)
-                        c_min = path_cost(P, x_init, x_near) + c(x_near, x_new)
+    def current_rewire_count(self, tree):
+        """
+        Return rewire count
+        :param tree: tree being rewired
+        :return: rewire count
+        """
+        # if no rewire count specified, set rewire count to be all vertices
+        if self.rewire_count is not None:
+            return self.trees[tree].V_count
 
-                E.add((x_min, x_new))
-                P[x_new] = x_min
+        # max valid rewire count
+        return min(self.trees[tree].V_count, self.rewire_count)
 
-                for x_near in X_near:  # rewire tree
-                    if path_cost(P, x_init, x_new) + c(x_new, x_near) < path_cost(P, x_init, x_near) and \
-                            X.collision_free(x_new, x_near, r):
-                        x_parent = P[x_near]
+    def rrt_star(self):
+        """
+        Based on algorithm found in: Incremental Sampling-based Algorithms for Optimal Motion Planning
+        http://roboticsproceedings.org/rss06/p34.pdf
+        :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
+        """
 
-                        E.remove((x_parent, x_near))
-                        P.pop(x_near)
-                        E.add((x_new, x_near))
-                        P[x_near] = x_new
+        self.add_vertex(0, self.x_init)
+        self.add_edge(0, self.x_init, None)
 
-        samples_taken += n
-        if samples_taken > max_samples:
-            print("Could not connect to goal")
-            V = None
+        while True:
+            for q in self.Q:  # iterate over different edge lengths
+                for i in range(q[1]):  # iterate over number of edges of given length to add
+                    x_new, x_nearest = self.new_and_near(0, q)
+                    if x_new is None:
+                        continue
 
-            break
+                    # get nearby vertices and cost-to-come
+                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
-        print("Finished expanding tree")
+                    # check nearby vertices for total cost and connect shortest valid edge
+                    self.connect_shortest_valid(0, x_new, L_near)
 
-    return V, E
+                    if x_new in self.trees[0].E:
+                        # rewire tree
+                        self.rewire(0, x_new, L_near)
 
+                    # probabilistically check if solution found
+                    if self.prc and random.random() < self.prc:
+                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                        path = self.get_path()
+                        if path is not None:
+                            return path
 
-def rrt_star_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
-                       x_goal: tuple, rewire_count: int = None) -> (set, dict):
-    """
-    Create and return a Rapidly-exploring Random Tree
-    https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
-    :param X: Configuration Space
-    :param x_init: initial location
-    :param n: number of samples to take between iterations
-    :param max_samples: max number of samples to take
-    :param q: length of new edges added to tree
-    :param r: resolution of points to sample along edge when checking for collisions
-    :param x_goal: goal location
-    :param rewire_count: number of nearby branches to rewire
-    :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
-    """
-    V, E = rrt_star_until_connect(X, x_init, n, max_samples, q, r, x_goal, rewire_count)
-    if V is None:
-        return E, []
-    else:
-        g = convert_edge_set_to_dict(E)
-        came_from, cost_so_far = a_star_search(g, x_init, x_goal)
-        path = reconstruct_path(came_from, x_init, x_goal)
-
-        return E, path
-
-
-def path_cost(P: dict, x_init: tuple, x: tuple) -> float:
-    """
-    Cost of the unique path from x_init to x
-    :param P: parents of children, in form of child: parent
-    :param x_init: initial location
-    :param x: goal location
-    :return: cost of unique path from x_init to x
-    """
-    cost = 0
-    while not x == x_init:
-        p = P[x]
-        cost += distance_between_points(x, p)
-        x = p
-
-    return cost
-
-
-def c(a: tuple, b: tuple) -> float:
-    """
-    Cost function of the line between x_near and x_new
-    :param a: start of line
-    :param b: end of line
-    :return: cost function between a and b
-    """
-    dist = distance_between_points(a, b)
-
-    return dist
+                    # check if can connect to goal after generating max_samples
+                    if self.samples_taken >= self.max_samples:
+                        return self.get_path()

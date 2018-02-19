@@ -1,89 +1,48 @@
-# This file is subject to the terms and conditions defined in
-# file 'LICENSE', which is part of this source code package.
-import uuid
+import random
 
-from rtree import index
-
-from src.a_star.a_star import a_star_search
-from src.a_star.a_star import reconstruct_path
-from src.configuration_space.configuration_space import ConfigurationSpace
-from src.rrt.primitive_procedures import can_connect_to_goal
-from src.rrt.primitive_procedures import connect_to_goal
-from src.rrt.primitive_procedures import steer
-from src.utilities.conversion import convert_edge_set_to_dict
+from src.rrt.rrt_base import RRTBase
 
 
-def rrt_until_connect(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
-                      x_goal: tuple) -> (set, dict):
-    """
-    Create and return a Rapidly-exploring Random Tree, keeps expanding until can connect to goal
-    https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
-    :param X: Configuration Space
-    :param x_init: initial location
-    :param n: number of samples to take each iteration
-    :param max_samples: max number of samples before timing out
-    :param q: length of new edges added to tree
-    :param r: resolution of points to sample along edge when checking for collisions
-    :param x_goal: goal location
-    :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
-    """
-    V = {x_init}
-    p = index.Property()
-    p.dimension = X.dimensions
-    V_rtree = index.Index(interleaved=True, properties=p)
-    V_rtree.insert(uuid.uuid4(), x_init + x_init, x_init)
-    E = set()
-    samples_taken = 0
+class RRT(RRTBase):
+    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01):
+        """
+        Template RRT planner
+        :param X: Search Space
+        :param Q: list of lengths of edges added to tree
+        :param x_init: tuple, initial location
+        :param x_goal: tuple, goal location
+        :param max_samples: max number of samples to take
+        :param r: resolution of points to sample along edge when checking for collisions
+        :param prc: probability of checking whether there is a solution
+        """
+        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc)
 
-    while True:
-        if can_connect_to_goal(X, V_rtree, x_goal, q, r):
-            print("Testing: Can connect to goal")
-            E = connect_to_goal(V_rtree, E, x_goal)
-            break
+    def rrt_search(self):
+        """
+        Create and return a Rapidly-exploring Random Tree, keeps expanding until can connect to goal
+        https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
+        :return: list representation of path, dict representing edges of tree in form E[child] = parent
+        """
+        self.add_vertex(0, self.x_init)
+        self.add_edge(0, self.x_init, None)
 
-        print("Can't connect to goal yet")
-        print("Expanding tree")
-        for i in range(n):
-            x_rand = X.sample_free()
-            x_nearest = list(V_rtree.nearest(x_rand, num_results=1, objects="raw"))[0]
-            x_new = steer(X, x_nearest, x_rand, q)
+        while True:
+            for q in self.Q:  # iterate over different edge lengths
+                for i in range(q[1]):  # iterate over number of edges of given length to add
+                    x_new, x_nearest = self.new_and_near(0, q)
+                    if x_new is None:
+                        continue
 
-            if X.collision_free(x_nearest, x_new, r):
-                V.add(x_new)
-                V_rtree.insert(uuid.uuid4(), x_new + x_new, x_new)
-                E.add((x_nearest, x_new))
+                    # connect shortest valid edge
+                    self.connect_to_point(0, x_nearest, x_new)
 
-        samples_taken += n
-        if samples_taken > max_samples:
-            print("Could not connect to goal")
-            V, E = None, None
-            break
+                    # probabilistically check if solution found
+                    if self.prc and random.random() < self.prc:
+                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                        path = self.get_path()
+                        if path is not None:
+                            return path
 
-        print("Finished expanding tree")
-
-    return V, E
-
-
-def rrt_tree_path(X: ConfigurationSpace, x_init: tuple, n: int, max_samples: int, q: float, r: float,
-                  x_goal: tuple) -> (set, dict):
-    """
-    Create and return a Rapidly-exploring Random Tree, keeps expanding until can connect to goal
-    https://en.wikipedia.org/wiki/Rapidly-exploring_random_tree
-    :param X: Configuration Space
-    :param x_init: initial location
-    :param n: number of samples to take between testing for goal connection
-    :param max_samples: max number of samples before timing out
-    :param q: length of new edges added to tree
-    :param r: resolution of points to sample along edge when checking for collisions
-    :param x_goal: goal location
-    :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
-    """
-    V, E = rrt_until_connect(X, x_init, n, max_samples, q, r, x_goal)
-    if V is None and E is None:
-        return []
-    else:
-        g = convert_edge_set_to_dict(E)
-        came_from, cost_so_far = a_star_search(g, x_init, x_goal)
-        path = reconstruct_path(came_from, x_init, x_goal)
-
-        return E, path
+                    # check if can connect to goal after generating max_samples
+                    if self.samples_taken >= self.max_samples:
+                        return self.get_path()

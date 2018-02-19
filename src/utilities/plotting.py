@@ -4,11 +4,11 @@
 import plotly as py
 from plotly import graph_objs as go
 
-from src.configuration_space.configuration_space import ConfigurationSpace
+colors = ['darkblue', 'teal']
 
 
 class Plot(object):
-    def __init__(self, filename: str):
+    def __init__(self, filename):
         """
         Create a plot
         :param filename: filename
@@ -22,46 +22,60 @@ class Plot(object):
         self.fig = {'data': self.data,
                     'layout': self.layout}
 
-    def plot_tree(self, X: ConfigurationSpace, E: set):
+    def plot_tree(self, X, trees):
         """
         Plot tree
-        :param X: Configuration Space
-        :param E: all edges created of tree
+        :param X: Search Space
+        :param trees: list of trees
         """
         if X.dimensions == 2:  # plot in 2D
-            for e in E:
-                start = e[0]
-                end = e[1]
-                trace = go.Scatter(
-                    x=[start[0], end[0]],
-                    y=[start[1], end[1]],
-                    line=dict(
-                        color="blue"
-                    ),
-                    mode="lines"
-                )
-                self.data.append(trace)
+            self.plot_tree_2d(trees)
         elif X.dimensions == 3:  # plot in 3D
-            for e in E:
-                start = e[0]
-                end = e[1]
-                trace = go.Scatter3d(
-                    x=[start[0], end[0]],
-                    y=[start[1], end[1]],
-                    z=[start[2], end[2]],
-                    line=dict(
-                        color="blue"
-                    ),
-                    mode="lines"
-                )
-                self.data.append(trace)
+            self.plot_tree_3d(trees)
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
-    def plot_obstacles(self, X: ConfigurationSpace, O: list):
+    def plot_tree_2d(self, trees):
+        """
+        Plot 2D trees
+        :param trees: trees to plot
+        """
+        for i, tree in enumerate(trees):
+            for start, end in tree.E.items():
+                if end is not None:
+                    trace = go.Scatter(
+                        x=[start[0], end[0]],
+                        y=[start[1], end[1]],
+                        line=dict(
+                            color=colors[i]
+                        ),
+                        mode="lines"
+                    )
+                    self.data.append(trace)
+
+    def plot_tree_3d(self, trees):
+        """
+        Plot 3D trees
+        :param trees: trees to plot
+        """
+        for i, tree in enumerate(trees):
+            for start, end in tree.E.items():
+                if end is not None:
+                    trace = go.Scatter3d(
+                        x=[start[0], end[0]],
+                        y=[start[1], end[1]],
+                        z=[start[2], end[2]],
+                        line=dict(
+                            color=colors[i]
+                        ),
+                        mode="lines"
+                    )
+                    self.data.append(trace)
+
+    def plot_obstacles(self, X, O):
         """
         Plot obstacles
-        :param X: Configuration Space
+        :param X: Search Space
         :param O: list of obstacles
         """
         if X.dimensions == 2:  # plot in 2D
@@ -99,10 +113,10 @@ class Plot(object):
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
-    def plot_path(self, X: ConfigurationSpace, path: list):
+    def plot_path(self, X, path):
         """
-        Plot path through Configuration Space
-        :param X: Configuration Space
+        Plot path through Search Space
+        :param X: Search Space
         :param path: path through space given as a sequence of points
         """
         if X.dimensions == 2:  # plot in 2D
@@ -142,10 +156,10 @@ class Plot(object):
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
-    def plot_start(self, X: ConfigurationSpace, x_init: tuple):
+    def plot_start(self, X, x_init):
         """
         Plot starting point
-        :param X: Configuration Space
+        :param X: Search Space
         :param x_init: starting location
         """
         if X.dimensions == 2:  # plot in 2D
@@ -153,7 +167,7 @@ class Plot(object):
                 x=[x_init[0]],
                 y=[x_init[1]],
                 line=dict(
-                    color="green",
+                    color="orange",
                     width=10
                 ),
                 mode="markers"
@@ -166,7 +180,7 @@ class Plot(object):
                 y=[x_init[1]],
                 z=[x_init[2]],
                 line=dict(
-                    color="green",
+                    color="orange",
                     width=10
                 ),
                 mode="markers"
@@ -176,10 +190,10 @@ class Plot(object):
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
-    def plot_goal(self, X: ConfigurationSpace, x_goal: tuple):
+    def plot_goal(self, X, x_goal):
         """
         Plot goal point
-        :param X: Configuration Space
+        :param X: Search Space
         :param x_goal: goal location
         """
         if X.dimensions == 2:  # plot in 2D
@@ -187,7 +201,7 @@ class Plot(object):
                 x=[x_goal[0]],
                 y=[x_goal[1]],
                 line=dict(
-                    color="blue",
+                    color="green",
                     width=10
                 ),
                 mode="markers"
@@ -200,7 +214,7 @@ class Plot(object):
                 y=[x_goal[1]],
                 z=[x_goal[2]],
                 line=dict(
-                    color="blue",
+                    color="green",
                     width=10
                 ),
                 mode="markers"
@@ -210,8 +224,8 @@ class Plot(object):
         else:  # can't plot in higher dimensions
             print("Cannot plot in > 3 dimensions")
 
-    def draw(self):
+    def draw(self, auto_open=True):
         """
         Render the plot to a file
         """
-        py.offline.plot(self.fig, filename=self.filename)
+        py.offline.plot(self.fig, filename=self.filename, auto_open=auto_open)
