@@ -1,4 +1,5 @@
 import random
+from itertools import cycle
 
 from src.rrt.rrt_base import RRTBase
 
@@ -26,23 +27,23 @@ class RRT(RRTBase):
         self.add_vertex(0, self.x_init)
         self.add_edge(0, self.x_init, None)
 
-        while True:
-            for q in self.Q:  # iterate over different edge lengths
-                for i in range(q[1]):  # iterate over number of edges of given length to add
-                    x_new, x_nearest = self.new_and_near(0, q)
-                    if x_new is None:
-                        continue
+        for q in cycle(self.Q):  # iterate over different edge lengths until solution found or time out
+            for i in range(q[1]):  # iterate over number of edges of given length to add
+                x_new, x_nearest = self.new_and_near(0, q)
 
-                    # connect shortest valid edge
-                    self.connect_to_point(0, x_nearest, x_new)
+                if x_new is None:
+                    continue
 
-                    # probabilistically check if solution found
-                    if self.prc and random.random() < self.prc:
-                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
-                        path = self.get_path()
-                        if path is not None:
-                            return path
+                # connect shortest valid edge
+                self.connect_to_point(0, x_nearest, x_new)
 
-                    # check if can connect to goal after generating max_samples
-                    if self.samples_taken >= self.max_samples:
-                        return self.get_path()
+                # probabilistically check if solution found
+                if self.prc and random.random() < self.prc:
+                    print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                    path = self.get_path()
+                    if path is not None:
+                        return path
+
+                # check if can connect to goal after generating max_samples
+                if self.samples_taken >= self.max_samples:
+                    return self.get_path()
