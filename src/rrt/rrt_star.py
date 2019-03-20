@@ -1,7 +1,6 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 import random
-from itertools import cycle
 from operator import itemgetter
 
 from src.rrt.heuristics import cost_to_go
@@ -35,10 +34,10 @@ class RRTStar(RRT):
         :return: list of nearby vertices and their costs, sorted in ascending order by cost
         """
         X_near = self.nearby(tree, x_new, self.current_rewire_count(tree))
-        L_near = [(x_near, path_cost(self.trees[tree].E, x_init, x_near) + segment_cost(x_near, x_new)) for
+        L_near = [(path_cost(self.trees[tree].E, x_init, x_near) + segment_cost(x_near, x_new), x_near) for
                   x_near in X_near]
         # noinspection PyTypeChecker
-        L_near.sort(key=itemgetter(1))
+        L_near.sort(key=itemgetter(0))
 
         return L_near
 
@@ -51,9 +50,9 @@ class RRTStar(RRT):
         :param L_near: list of nearby vertices used to rewire
         :return:
         """
-        for x_near, c_near in L_near:
+        for c_near, x_near in L_near:
             curr_cost = path_cost(self.trees[tree].E, self.x_init, x_near)
-            tent_cost = path_cost(self.trees[tree].E, self.x_init, x_new) + c_near
+            tent_cost = path_cost(self.trees[tree].E, self.x_init, x_new) + segment_cost(x_new, x_near)
 
             if tent_cost < curr_cost and self.X.collision_free(x_near, x_new, self.r):
                 self.trees[tree].E[x_near] = x_new
@@ -66,7 +65,7 @@ class RRTStar(RRT):
         :param L_near: list of nearby vertices
         """
         # check nearby vertices for total cost and connect shortest valid edge
-        for x_near, c_near in L_near:
+        for c_near, x_near in L_near:
             if c_near + cost_to_go(x_near, self.x_goal) < self.c_best and self.connect_to_point(tree, x_near, x_new):
                 break
 
@@ -93,29 +92,30 @@ class RRTStar(RRT):
         self.add_vertex(0, self.x_init)
         self.add_edge(0, self.x_init, None)
 
-        for q in cycle(self.Q):  # iterate over different edge lengths
-            for i in range(q[1]):  # iterate over number of edges of given length to add
-                x_new, x_nearest = self.new_and_near(0, q)
-                if x_new is None:
-                    continue
+        while True:
+            for q in self.Q:  # iterate over different edge lengths
+                for i in range(q[1]):  # iterate over number of edges of given length to add
+                    x_new, x_nearest = self.new_and_near(0, q)
+                    if x_new is None:
+                        continue
 
-                # get nearby vertices and cost-to-come
-                L_near = self.get_nearby_vertices(0, self.x_init, x_new)
+                    # get nearby vertices and cost-to-come
+                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
-                # check nearby vertices for total cost and connect shortest valid edge
-                self.connect_shortest_valid(0, x_new, L_near)
+                    # check nearby vertices for total cost and connect shortest valid edge
+                    self.connect_shortest_valid(0, x_new, L_near)
 
-                if x_new in self.trees[0].E:
-                    # rewire tree
-                    self.rewire(0, x_new, L_near)
+                    if x_new in self.trees[0].E:
+                        # rewire tree
+                        self.rewire(0, x_new, L_near)
 
-                # probabilistically check if solution found
-                if self.prc and random.random() < self.prc:
-                    print("Checking if can connect to goal at", str(self.samples_taken), "samples")
-                    path = self.get_path()
-                    if path is not None:
-                        return path
+                    # probabilistically check if solution found
+                    if self.prc and random.random() < self.prc:
+                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                        path = self.get_path()
+                        if path is not None:
+                            return path
 
-                # check if can connect to goal after generating max_samples
-                if self.samples_taken >= self.max_samples:
-                    return self.get_path()
+                    # check if can connect to goal after generating max_samples
+                    if self.samples_taken >= self.max_samples:
+                        return self.get_path()
