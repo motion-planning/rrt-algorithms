@@ -205,10 +205,10 @@ class RRTBase(object):
             print("Checking if can connect to goal at", str(self.samples_taken), "samples")
             path = self.get_path()
             if path is not None:
-                return (True, path)
+                return True, path
 
         # check if can connect to goal after generating max_samples
         if self.samples_taken >= self.max_samples:
-            return (True, self.get_path())
+            return True, self.get_path()
 
-        return (False, None)
+        return False, None

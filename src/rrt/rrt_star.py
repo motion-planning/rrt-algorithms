@@ -41,21 +41,20 @@ class RRTStar(RRT):
         # noinspection PyTypeChecker
         L_near.sort(key=itemgetter(0))
 
-    def get_nearby_vertices_classical(self, tree, x_init, x_new):
+    def get_nearby_vertices_classical(self, tree, x_new):
         """
         Get nearby vertices to new vertex and their associated costs, number defined by rewire count
         Classical cost calculation for nearby vertices. It only uses the segment cost between near and new vertex.
         :param tree: tree in which to search
-        :param x_init: starting vertex used to calculate path cost
         :param x_new: vertex around which to find nearby vertices
         :return: list of nearby vertices and their costs, sorted in ascending order by cost
         """
         X_near = self.nearby(tree, x_new, self.current_rewire_count(tree))
-        L_near = [(x_near, segment_cost(x_near, x_new)) for
-                  x_near in X_near]
-        # noinspection PyTypeChecker
-        L_near.sort(key=itemgetter(1))
+        L_near = [(segment_cost(x_near, x_new), x_near) for x_near in X_near]
+        L_near.sort(key=itemgetter(0))
+
         return L_near
+
     def rewire(self, tree, x_new, L_near):
         """
         Rewire tree to shorten edges if possible
@@ -114,7 +113,7 @@ class RRTStar(RRT):
                         continue
 
                     # get nearby vertices and cost-to-come
-                    L_near = self.get_nearby_vertices_classical(0, self.x_init, x_new)
+                    L_near = self.get_nearby_vertices_classical(0, x_new)
 
                     # check nearby vertices for total cost and connect shortest valid edge
                     self.connect_shortest_valid(0, x_new, L_near)
