@@ -4,7 +4,7 @@
 import random
 
 from src.rrt.heuristics import path_cost
-from src.rrt.rrt_star import RRTStar
+from src.rrt.rrt_star_rewire import RRTStarRewire
 
 
 class RRTStarBidirectional(RRTStarRewire):
