@@ -7,7 +7,7 @@ from src.rrt.heuristics import segment_cost, path_cost
 from src.rrt.rrt import RRT
 
 
-class RRTStar(RRT):
+class RRTStarRewire(RRT):
     def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
         """
         RRT* Search

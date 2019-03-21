@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 from src.rrt.tree import Tree
@@ -196,3 +198,17 @@ class RRTBase(object):
         path.reverse()
 
         return path
+
+    def check_solution(self):
+        # probabilistically check if solution found
+        if self.prc and random.random() < self.prc:
+            print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+            path = self.get_path()
+            if path is not None:
+                return (True, path)
+
+        # check if can connect to goal after generating max_samples
+        if self.samples_taken >= self.max_samples:
+            return (True, self.get_path())
+
+        return (False, None)

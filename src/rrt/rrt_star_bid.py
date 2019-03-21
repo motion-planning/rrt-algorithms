@@ -7,7 +7,7 @@ from src.rrt.heuristics import path_cost
 from src.rrt.rrt_star import RRTStar
 
 
-class RRTStarBidirectional(RRTStar):
+class RRTStarBidirectional(RRTStarRewire):
     def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
         """
         Bidirectional RRT* Search

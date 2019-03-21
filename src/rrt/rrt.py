@@ -1,5 +1,3 @@
-import random
-
 from src.rrt.rrt_base import RRTBase
 
 
@@ -37,13 +35,6 @@ class RRT(RRTBase):
                     # connect shortest valid edge
                     self.connect_to_point(0, x_nearest, x_new)
 
-                    # probabilistically check if solution found
-                    if self.prc and random.random() < self.prc:
-                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
-                        path = self.get_path()
-                        if path is not None:
-                            return path
-
-                    # check if can connect to goal after generating max_samples
-                    if self.samples_taken >= self.max_samples:
-                        return self.get_path()
+                    solution = self.check_solution()
+                    if solution[0]:
+                        return solution[1]
