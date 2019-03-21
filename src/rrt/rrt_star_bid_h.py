@@ -1,7 +1,6 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 import random
-from itertools import cycle
 
 from src.rrt.rrt_star_bid import RRTStarBidirectional
 
@@ -35,48 +34,49 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
         self.add_vertex(1, self.x_goal)
         self.add_edge(1, self.x_goal, None)
 
-        for q in cycle(self.Q):  # iterate over different edge lengths
-            for i in range(q[1]):  # iterate over number of edges of given length to add
-                x_new, x_nearest = self.new_and_near(0, q)
-                if x_new is None:
-                    continue
+        while True:
+            for q in self.Q:  # iterate over different edge lengths
+                for i in range(q[1]):  # iterate over number of edges of given length to add
+                    x_new, x_nearest = self.new_and_near(0, q)
+                    if x_new is None:
+                        continue
 
-                # get nearby vertices and cost-to-come
-                L_near = self.get_nearby_vertices(0, self.x_init, x_new)
+                    # get nearby vertices and cost-to-come
+                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
-                # check nearby vertices for total cost and connect shortest valid edge
-                self.connect_shortest_valid(0, x_new, L_near)
+                    # check nearby vertices for total cost and connect shortest valid edge
+                    self.connect_shortest_valid(0, x_new, L_near)
 
-                if x_new in self.trees[0].E:
-                    # rewire tree
-                    self.rewire(0, x_new, L_near)
+                    if x_new in self.trees[0].E:
+                        # rewire tree
+                        self.rewire(0, x_new, L_near)
 
-                    # nearby vertices from opposite tree and cost-to-come
-                    L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
+                        # nearby vertices from opposite tree and cost-to-come
+                        L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
-                    self.connect_trees(0, 1, x_new, L_near)
+                        self.connect_trees(0, 1, x_new, L_near)
 
-                self.lazy_shortening()
+                    self.lazy_shortening()
 
-                if self.prc and random.random() < self.prc:  # probabilistically check if solution found
-                    print("Checking if can connect to goal at", str(self.samples_taken), "samples")
-                    if self.sigma_best is not None:
-                        print("Can connect to goal")
+                    if self.prc and random.random() < self.prc:  # probabilistically check if solution found
+                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                        if self.sigma_best is not None:
+                            print("Can connect to goal")
+                            self.unswap()
+
+                            return self.sigma_best
+
+                    if self.samples_taken >= self.max_samples:
                         self.unswap()
 
+                        if self.sigma_best is not None:
+                            print("Can connect to goal")
+
+                            return self.sigma_best
+                        else:
+                            print("Could not connect to goal")
+
                         return self.sigma_best
-
-                if self.samples_taken >= self.max_samples:
-                    self.unswap()
-
-                    if self.sigma_best is not None:
-                        print("Can connect to goal")
-
-                        return self.sigma_best
-                    else:
-                        print("Could not connect to goal")
-
-                    return self.sigma_best
 
             self.swap_trees()
 
