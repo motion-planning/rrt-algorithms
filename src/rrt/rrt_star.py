@@ -24,7 +24,7 @@ class RRTStar(RRT):
         self.rewire_count = rewire_count if rewire_count is not None else 0
         self.c_best = float('inf')  # length of best solution thus far
 
-    def get_nearby_vertices_better(self, tree, x_init, x_new):
+    def get_nearby_vertices(self, tree, x_init, x_new):
         """
         Get nearby vertices to new vertex and their associated path costs from the root of tree
         as if new vertex is connected to each one separately.
@@ -40,20 +40,6 @@ class RRTStar(RRT):
                   x_near in X_near]
         # noinspection PyTypeChecker
         L_near.sort(key=itemgetter(1))
-        return L_near
-
-    def get_nearby_vertices_classical(self, tree, x_new):
-        """
-        Get nearby vertices to new vertex and their associated costs, number defined by rewire count
-        Classical cost calculation for nearby vertices. It only uses the segment cost between near and new vertex.
-        :param tree: tree in which to search
-        :param x_new: vertex around which to find nearby vertices
-        :return: list of nearby vertices and their costs, sorted in ascending order by cost
-        """
-        X_near = self.nearby(tree, x_new, self.current_rewire_count(tree))
-        L_near = [(segment_cost(x_near, x_new), x_near) for x_near in X_near]
-        L_near.sort(key=itemgetter(0))
-
         return L_near
 
     def rewire(self, tree, x_new, L_near):
