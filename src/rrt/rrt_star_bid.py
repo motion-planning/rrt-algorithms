@@ -4,10 +4,10 @@
 import random
 
 from src.rrt.heuristics import path_cost
-from src.rrt.rrt_star_rewire import RRTStarRewire
+from src.rrt.rrt_star import RRTStar
 
 
-class RRTStarBidirectional(RRTStarRewire):
+class RRTStarBidirectional(RRTStar):
     def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
         """
         Bidirectional RRT* Search
@@ -64,6 +64,7 @@ class RRTStarBidirectional(RRTStarRewire):
         """
         if self.swapped:
             self.swap_trees()
+
         if self.sigma_best[0] is not self.x_init:
             self.sigma_best.reverse()
 
