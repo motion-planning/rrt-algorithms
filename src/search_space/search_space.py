@@ -2,12 +2,12 @@
 # file 'LICENSE', which is part of this source code package.
 import math
 import random
-import uuid
 
 import numpy as np
 from rtree import index
 
 from src.utilities.geometry import distance_between_points
+from src.utilities.obstacle_generation import obstacle_generator
 
 
 class SearchSpace(object):
@@ -84,48 +84,3 @@ class SearchSpace(object):
             x[dimension] = random.uniform(self.dimension_lengths[dimension][0], self.dimension_lengths[dimension][1])
 
         return tuple(x)
-    def generate_random_obstacles(self,start,end,n):
-        """
-        Generates n random obstacles without disrupting world connectivity.
-        It also respects start and end points so that they don't lie inside of an obstacle.
-        """
-        i = 0
-        obstacles = []
-        while i<n:
-            center = np.empty(len(self.dimension_lengths),np.float)
-            scollision = True
-            fcollision = True
-            edge_lengths = []
-            for j in range(self.dimensions):
-                max_edge_length = (self.dimension_lengths[j][1] - self.dimension_lengths[j][0])/10.0
-                edge_length = random.uniform(2.0,max_edge_length)
-                center[j] = random.uniform(self.dimension_lengths[j][0]+edge_length,self.dimension_lengths[j][1]-edge_length)
-                edge_lengths.append(edge_length)
-                
-                if abs(start[j] - center[j])>edge_length:
-                    scollision = False
-                if abs(end[j] - center[j])>edge_length:
-                    fcollision = False
-            #Check if any part of the obstacle is inside of another obstacle.
-            
-            
-            min_corner = np.empty(self.dimensions,np.float)            
-            max_corner = np.empty(self.dimensions,np.float)            
-            for j in range(self.dimensions):
-                min_corner[j] = center[j] - edge_lengths[j]
-                max_corner[j] = center[j] + edge_lengths[j]
-            obstacle = np.append(min_corner,max_corner)
-            # Check newly generated obstacle intersects any former ones. Also respect start and end points
-            if len(list(self.obs.intersection(obstacle)))>0 or scollision or fcollision:
-                continue
-            i+=1
-            obstacles.append(obstacle)
-            self.obs.add(uuid.uuid4(),tuple(obstacle),tuple(obstacle))
-        return obstacles
-def obstacle_generator(obstacles):
-    """
-    Add obstacles to r-tree
-    :param obstacles: list of obstacles
-    """
-    for obstacle in obstacles:
-        yield (uuid.uuid4(), obstacle, obstacle)

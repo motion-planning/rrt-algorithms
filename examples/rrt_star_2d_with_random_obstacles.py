@@ -4,6 +4,7 @@ import numpy as np
 
 from src.rrt.rrt_star import RRTStar
 from src.search_space.search_space import SearchSpace
+from src.utilities.obstacle_generation import generate_random_obstacles
 from src.utilities.plotting import Plot
 
 X_dimensions = np.array([(0, 100), (0, 100)])  # dimensions of Search Space
@@ -18,8 +19,8 @@ prc = 0.1  # probability of checking for a connection to goal
 
 # create Search Space
 X = SearchSpace(X_dimensions)
-n=50
-Obstacles = X.generate_random_obstacles(x_init,x_goal,n)
+n = 50
+Obstacles = generate_random_obstacles(X, x_init, x_goal, n)
 # create rrt_search
 rrt = RRTStar(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
 path = rrt.rrt_star()
