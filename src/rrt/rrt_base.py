@@ -102,8 +102,8 @@ class RRTBase(object):
         :return: bool, True if able to add edge, False if prohibited by an obstacle
         """
         if self.trees[tree].V.count(x_b) == 0 and self.X.collision_free(x_a, x_b, self.r):
-            self.add_vertex(0, x_b)
-            self.add_edge(0, x_b, x_a)
+            self.add_vertex(tree, x_b)
+            self.add_edge(tree, x_b, x_a)
 
             return True
 
