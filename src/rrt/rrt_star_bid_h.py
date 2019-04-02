@@ -3,7 +3,7 @@
 import random
 
 from src.rrt.rrt_star_bid import RRTStarBidirectional
-
+from src.utilities.geometry import  distance_between_points
 
 class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
     def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count: int = None):
@@ -107,3 +107,8 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
 
                 # update best path
                 self.sigma_best = self.sigma_best[:min(a, b) + 1] + self.sigma_best[max(a, b):]
+
+                # update the cost for the best path
+                self.c_best = 0
+                for i in range(len(self.sigma_best)-1):
+                    self.c_best += distance_between_points(self.sigma_best[i],self.sigma_best[i+1])
