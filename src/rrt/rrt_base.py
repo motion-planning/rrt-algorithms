@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 from src.rrt.tree import Tree
-from src.utilities.geometry import distance_between_points
+from src.utilities.geometry import dist_between_points
 
 
 class RRTBase(object):
@@ -164,7 +164,7 @@ class RRTBase(object):
         ab = tuple(ab)
         zero_vector = tuple(np.zeros(len(ab)))
 
-        ba_length = distance_between_points(zero_vector, ab)  # get length of vector ab
+        ba_length = dist_between_points(zero_vector, ab)  # get length of vector ab
         unit_vector = np.fromiter((i / ba_length for i in ab), np.float, len(ab))
         # scale vector to desired length
         scaled_vector = np.fromiter((i * distance for i in unit_vector), np.float, len(unit_vector))

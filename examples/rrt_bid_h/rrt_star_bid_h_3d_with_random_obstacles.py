@@ -28,7 +28,7 @@ rrt = RRTStarBidirectionalHeuristic(X, Q, x_init, x_goal, max_samples, r, prc, r
 path = rrt.rrt_star_bid_h()
 
 # plot
-plot = Plot("rrt_star_bid_h_3d")
+plot = Plot("rrt_star_bid_h_3d_with_random_obstacles")
 plot.plot_tree(X, rrt.trees)
 if path is not None:
     plot.plot_path(X, path)

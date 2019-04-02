@@ -3,7 +3,8 @@
 import random
 
 from src.rrt.rrt_star_bid import RRTStarBidirectional
-from src.utilities.geometry import  distance_between_points
+from src.utilities.geometry import dist_between_points, pairwise
+
 
 class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
     def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count: int = None):
@@ -88,6 +89,8 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
             a, b = 0, 0
             while not abs(a - b) > 1:
                 a, b = random.sample(range(0, len(self.sigma_best)), 2)
+
+            a, b = min(a, b), max(a, b)
             v_a, v_b = tuple(self.sigma_best[a]), tuple(self.sigma_best[b])
 
             if self.X.collision_free(v_a, v_b, self.r):
@@ -106,9 +109,8 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
                     self.trees[1].E[v_b] = v_a
 
                 # update best path
+                # remove cost of removed edges
+                self.c_best -= sum(dist_between_points(i, j) for i, j in pairwise(self.sigma_best[a:b]))
+                # add cost of new edge
+                self.c_best += + dist_between_points(self.sigma_best[a], self.sigma_best[b])
                 self.sigma_best = self.sigma_best[:min(a, b) + 1] + self.sigma_best[max(a, b):]
-
-                # update the cost for the best path
-                self.c_best = 0
-                for i in range(len(self.sigma_best)-1):
-                    self.c_best += distance_between_points(self.sigma_best[i],self.sigma_best[i+1])

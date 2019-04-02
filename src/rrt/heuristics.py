@@ -1,7 +1,7 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
-from src.utilities.geometry import distance_between_points
+from src.utilities.geometry import dist_between_points
 
 
 def cost_to_go(a: tuple, b: tuple) -> float:
@@ -10,7 +10,7 @@ def cost_to_go(a: tuple, b: tuple) -> float:
     :param b: next location
     :return: estimated segment_cost-to-go from a to b
     """
-    return distance_between_points(a, b)
+    return dist_between_points(a, b)
 
 
 def path_cost(E, a, b):
@@ -24,7 +24,7 @@ def path_cost(E, a, b):
     cost = 0
     while not b == a:
         p = E[b]
-        cost += distance_between_points(b, p)
+        cost += dist_between_points(b, p)
         b = p
 
     return cost
@@ -37,4 +37,4 @@ def segment_cost(a, b):
     :param b: end of line
     :return: segment_cost function between a and b
     """
-    return distance_between_points(a, b)
+    return dist_between_points(a, b)

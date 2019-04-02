@@ -6,7 +6,7 @@ import random
 import numpy as np
 from rtree import index
 
-from src.utilities.geometry import distance_between_points
+from src.utilities.geometry import dist_between_points
 from src.utilities.obstacle_generation import obstacle_generator
 
 
@@ -66,7 +66,7 @@ class SearchSpace(object):
         :param r: resolution of points to sample along edge when checking for collisions
         :return: True if line segment does not intersect an obstacle, False otherwise
         """
-        dist = distance_between_points(start, end)
+        dist = dist_between_points(start, end)
         # divide line between points into equidistant points at given resolution
         dim_linspaces = [np.linspace(s_i, e_i, int(math.ceil(dist / r))) for s_i, e_i in zip(start, end)]
 
