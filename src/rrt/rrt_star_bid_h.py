@@ -110,7 +110,7 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
 
                 # update best path
                 # remove cost of removed edges
-                self.c_best -= sum(dist_between_points(i, j) for i, j in pairwise(self.sigma_best[a:b]))
+                self.c_best -= sum(dist_between_points(i, j) for i, j in pairwise(self.sigma_best[a:b + 1]))
                 # add cost of new edge
-                self.c_best += + dist_between_points(self.sigma_best[a], self.sigma_best[b])
-                self.sigma_best = self.sigma_best[:min(a, b) + 1] + self.sigma_best[max(a, b):]
+                self.c_best += dist_between_points(self.sigma_best[a], self.sigma_best[b])
+                self.sigma_best = self.sigma_best[:a + 1] + self.sigma_best[b:]
