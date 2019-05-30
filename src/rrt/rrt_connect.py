@@ -3,6 +3,7 @@ import enum
 import numpy as np
 
 from src.rrt.rrt_base import RRTBase
+from src.utilities.geometry import steer
 
 
 class Status(enum.Enum):
@@ -44,7 +45,7 @@ class RRTConnect(RRTBase):
 
     def extend(self, tree, x_rand):
         x_nearest = self.get_nearest(tree, x_rand)
-        x_new = self.steer(x_nearest, x_rand, self.Q[0])
+        x_new = steer(self.X, x_nearest, x_rand, self.Q[0])
         if self.connect_to_point(tree, x_nearest, x_new):
             if np.abs(np.sum(np.array(x_new) - np.array(x_rand))) < 1e-2:
                 return x_new, Status.REACHED
@@ -78,6 +79,5 @@ class RRTConnect(RRTBase):
                     second_part = self.reconstruct_path(1, self.x_goal, self.get_nearest(1, x_new))
                     second_part.reverse()
                     return first_part + second_part
-
             self.swap_trees()
             self.samples_taken += 1
