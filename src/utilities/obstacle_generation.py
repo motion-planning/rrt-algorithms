@@ -18,9 +18,11 @@ def generate_random_obstacles(X, start, end, n):
         fcollision = True
         edge_lengths = []
         for j in range(X.dimensions):
-            # None of the sides of a hyperrectangle can be higher than 0.1 of the total span in that particular X.dimensions
+            # None of the sides of a hyperrectangle can be higher than 0.1 of the total span
+            # in that particular X.dimensions
             max_edge_length = (X.dimension_lengths[j][1] - X.dimension_lengths[j][0]) / 10.0
-            # None of the sides of a hyperrectangle can be higher than 0.01 of the total span in that particular X.dimensions
+            # None of the sides of a hyperrectangle can be higher than 0.01 of the total span
+            # in that particular X.dimensions
             min_edge_length = (X.dimension_lengths[j][1] - X.dimension_lengths[j][0]) / 100.0
             edge_length = random.uniform(min_edge_length, max_edge_length)
             center[j] = random.uniform(X.dimension_lengths[j][0] + edge_length,

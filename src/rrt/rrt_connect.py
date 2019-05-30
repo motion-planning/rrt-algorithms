@@ -45,7 +45,7 @@ class RRTConnect(RRTBase):
 
     def extend(self, tree, x_rand):
         x_nearest = self.get_nearest(tree, x_rand)
-        x_new = steer(self.X, x_nearest, x_rand, self.Q[0])
+        x_new = steer(x_nearest, x_rand, self.Q[0])
         if self.connect_to_point(tree, x_nearest, x_new):
             if np.abs(np.sum(np.array(x_new) - np.array(x_rand))) < 1e-2:
                 return x_new, Status.REACHED

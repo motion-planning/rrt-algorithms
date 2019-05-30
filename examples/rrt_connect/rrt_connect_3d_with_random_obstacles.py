@@ -9,9 +9,6 @@ from src.utilities.plotting import Plot
 
 X_dimensions = np.array([(0, 100), (0, 100), (0, 100)])  # dimensions of Search Space
 # obstacles
-Obstacles = np.array(
-    [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40, 80, 40), (60, 60, 20, 80, 80, 40),
-     (60, 20, 20, 80, 40, 40), (60, 20, 60, 80, 40, 80), (20, 60, 60, 40, 80, 80), (60, 60, 60, 80, 80, 80)])
 x_init = (0, 0, 0)  # starting location
 x_goal = (100, 100, 100)  # goal location
 
