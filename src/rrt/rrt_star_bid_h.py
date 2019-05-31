@@ -7,7 +7,8 @@ from src.utilities.geometry import dist_between_points, pairwise
 
 
 class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count: int = None):
+    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01,
+                 rewire_count: int = None, conditional_rewire: bool = False):
         """
         Bidirectional RRT* Search
         :param X: Search Space
@@ -18,8 +19,12 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
         :param r: resolution of points to sample along edge when checking for collisions
         :param prc: probability of checking whether there is a solution
         :param rewire_count: number of nearby vertices to rewire
+        :param conditional_rewire: if True, set rewire count to 1 until solution found,
+        then set to specified rewire count (ensure runtime complexity guarantees)
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
+        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc,
+                         1 if conditional_rewire else rewire_count)
+        self.original_rewire_count = rewire_count
 
     def rrt_star_bid_h(self):
         """
@@ -56,6 +61,7 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
                         L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
                         self.connect_trees(0, 1, x_new, L_near)
+                        self.rewire_count = self.original_rewire_count
 
                     self.lazy_shortening()
 
