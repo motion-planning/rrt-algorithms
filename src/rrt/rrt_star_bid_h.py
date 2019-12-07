@@ -3,10 +3,12 @@
 import random
 
 from src.rrt.rrt_star_bid import RRTStarBidirectional
+from src.utilities.geometry import dist_between_points, pairwise
 
 
 class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count: int = None):
+    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01,
+                 rewire_count: int = None, conditional_rewire: bool = False):
         """
         Bidirectional RRT* Search
         :param X: Search Space
@@ -17,8 +19,12 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
         :param r: resolution of points to sample along edge when checking for collisions
         :param prc: probability of checking whether there is a solution
         :param rewire_count: number of nearby vertices to rewire
+        :param conditional_rewire: if True, set rewire count to 1 until solution found,
+        then set to specified rewire count (ensure runtime complexity guarantees)
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
+        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc,
+                         1 if conditional_rewire else rewire_count)
+        self.original_rewire_count = rewire_count
 
     def rrt_star_bid_h(self):
         """
@@ -55,6 +61,7 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
                         L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
                         self.connect_trees(0, 1, x_new, L_near)
+                        self.rewire_count = self.original_rewire_count
 
                     self.lazy_shortening()
 
@@ -88,6 +95,8 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
             a, b = 0, 0
             while not abs(a - b) > 1:
                 a, b = random.sample(range(0, len(self.sigma_best)), 2)
+
+            a, b = min(a, b), max(a, b)
             v_a, v_b = tuple(self.sigma_best[a]), tuple(self.sigma_best[b])
 
             if self.X.collision_free(v_a, v_b, self.r):
@@ -106,4 +115,8 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
                     self.trees[1].E[v_b] = v_a
 
                 # update best path
-                self.sigma_best = self.sigma_best[:min(a, b) + 1] + self.sigma_best[max(a, b):]
+                # remove cost of removed edges
+                self.c_best -= sum(dist_between_points(i, j) for i, j in pairwise(self.sigma_best[a:b + 1]))
+                # add cost of new edge
+                self.c_best += dist_between_points(self.sigma_best[a], self.sigma_best[b])
+                self.sigma_best = self.sigma_best[:a + 1] + self.sigma_best[b:]

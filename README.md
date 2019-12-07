@@ -1,7 +1,12 @@
 # rrt
-Collection of rrt-based algorithms that scale to n-dimensions
+Collection of rrt-based algorithms that scale to n-dimensions:
 - rrt
 - rrt* (rrt-star)
+- rrt* (bidirectional)
+- rrt* (bidriectional, lazy shortening)
+- rrt connect
+
+Utilizes [R-trees](https://en.wikipedia.org/wiki/R-tree) to improve performance by avoiding point-wise collision-checking and distance-checking.
 
 ## Requirements
 - [Python 3+](https://www.python.org/downloads/)
