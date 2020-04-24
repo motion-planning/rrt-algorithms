@@ -65,7 +65,7 @@ class RRTStarBidirectional(RRTStar):
         if self.swapped:
             self.swap_trees()
 
-        if self.sigma_best[0] is not self.x_init:
+        if self.sigma_best is not None and self.sigma_best[0] is not self.x_init:
             self.sigma_best.reverse()
 
     def rrt_star_bidirectional(self):
