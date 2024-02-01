@@ -21,5 +21,6 @@ setuptools.setup(
     python_requires='>=3.10',
     install_requires=['rtree==1.2.0',
                       'numpy>=1.25',
-                      'plotly'],
+                      'plotly',
+                      'scipy>=1.11'],
 )
