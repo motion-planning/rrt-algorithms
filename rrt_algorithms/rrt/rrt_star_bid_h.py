@@ -1,14 +1,14 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
-
 import random
 
-from src.rrt.heuristics import path_cost
-from src.rrt.rrt_star import RRTStar
+from rrt_algorithms.rrt.rrt_star_bid import RRTStarBidirectional
+from rrt_algorithms.utilities.geometry import dist_between_points, pairwise
 
 
-class RRTStarBidirectional(RRTStar):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
+class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
+    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01,
+                 rewire_count: int = None, conditional_rewire: bool = False):
         """
         Bidirectional RRT* Search
         :param X: Search Space
@@ -19,58 +19,16 @@ class RRTStarBidirectional(RRTStar):
         :param r: resolution of points to sample along edge when checking for collisions
         :param prc: probability of checking whether there is a solution
         :param rewire_count: number of nearby vertices to rewire
+        :param conditional_rewire: if True, set rewire count to 1 until solution found,
+        then set to specified rewire count (ensure runtime complexity guarantees)
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
-        self.sigma_best = None  # best solution thus far
-        self.swapped = False
+        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc,
+                         1 if conditional_rewire else rewire_count)
+        self.original_rewire_count = rewire_count
 
-    def connect_trees(self, a, b, x_new, L_near):
+    def rrt_star_bid_h(self):
         """
-        Check nearby vertices for total cost and connect shortest valid edge if possible
-        This results in both trees being connected
-        :param a: first tree to connect
-        :param b: second tree to connect
-        :param x_new: new vertex to add
-        :param L_near: nearby vertices
-        """
-        for c_near, x_near in L_near:
-            c_tent = c_near + path_cost(self.trees[a].E, self.x_init, x_new)
-            if c_tent < self.c_best and self.X.collision_free(x_near, x_new, self.r):
-                self.trees[b].V_count += 1
-                self.trees[b].E[x_new] = x_near
-                self.c_best = c_tent
-                sigma_a = self.reconstruct_path(a, self.x_init, x_new)
-                sigma_b = self.reconstruct_path(b, self.x_goal, x_new)
-                del sigma_b[-1]
-                sigma_b.reverse()
-                self.sigma_best = sigma_a + sigma_b
-
-                break
-
-    def swap_trees(self):
-        """
-        Swap trees and start/goal
-        """
-        # swap trees
-        self.trees[0], self.trees[1] = self.trees[1], self.trees[0]
-        # swap start/goal
-        self.x_init, self.x_goal = self.x_goal, self.x_init
-        self.swapped = not self.swapped
-
-    def unswap(self):
-        """
-        Check if trees have been swapped and unswap
-        Reverse path if needed to correspond with swapped trees
-        """
-        if self.swapped:
-            self.swap_trees()
-
-        if self.sigma_best is not None and self.sigma_best[0] is not self.x_init:
-            self.sigma_best.reverse()
-
-    def rrt_star_bidirectional(self):
-        """
-        Bidirectional RRT*
+        Bidirectional RRT* using added heuristics
         :return: set of Vertices; Edges in form: vertex: [neighbor_1, neighbor_2, ...]
         """
         # tree a
@@ -103,6 +61,9 @@ class RRTStarBidirectional(RRTStar):
                         L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
                         self.connect_trees(0, 1, x_new, L_near)
+                        self.rewire_count = self.original_rewire_count
+
+                    self.lazy_shortening()
 
                     if self.prc and random.random() < self.prc:  # probabilistically check if solution found
                         print("Checking if can connect to goal at", str(self.samples_taken), "samples")
@@ -125,3 +86,37 @@ class RRTStarBidirectional(RRTStar):
                         return self.sigma_best
 
             self.swap_trees()
+
+    def lazy_shortening(self):
+        """
+        Lazily attempt to shorten current best path
+        """
+        if self.sigma_best is not None and len(self.sigma_best) > 2:
+            a, b = 0, 0
+            while not abs(a - b) > 1:
+                a, b = random.sample(range(0, len(self.sigma_best)), 2)
+
+            a, b = min(a, b), max(a, b)
+            v_a, v_b = tuple(self.sigma_best[a]), tuple(self.sigma_best[b])
+
+            if self.X.collision_free(v_a, v_b, self.r):
+                # create new edge connecting vertices
+                if v_a in self.trees[0].E and v_b in self.reconstruct_path(0, self.x_init, v_a):
+                    self.trees[0].E[v_a] = v_b
+                elif v_a in self.trees[1].E and v_b in self.reconstruct_path(1, self.x_goal, v_a):
+                    self.trees[1].E[v_a] = v_b
+                elif v_b in self.trees[0].E and v_a in self.reconstruct_path(0, self.x_init, v_b):
+                    self.trees[0].E[v_b] = v_a
+                elif v_b in self.trees[1].E and v_a in self.reconstruct_path(1, self.x_goal, v_b):
+                    self.trees[1].E[v_b] = v_a
+                elif v_a in self.trees[0].E:
+                    self.trees[0].E[v_b] = v_a
+                else:
+                    self.trees[1].E[v_b] = v_a
+
+                # update best path
+                # remove cost of removed edges
+                self.c_best -= sum(dist_between_points(i, j) for i, j in pairwise(self.sigma_best[a:b + 1]))
+                # add cost of new edge
+                self.c_best += dist_between_points(self.sigma_best[a], self.sigma_best[b])
+                self.sigma_best = self.sigma_best[:a + 1] + self.sigma_best[b:]

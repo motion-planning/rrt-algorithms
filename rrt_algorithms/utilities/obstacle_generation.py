@@ -8,7 +8,7 @@ import numpy as np
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.search_space.search_space import SearchSpace
+    from rrt_algorithms.search_space.search_space import SearchSpace
 
 
 
