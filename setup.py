@@ -19,7 +19,7 @@ setuptools.setup(
     ],
     include_package_data=True,
     python_requires='>=3.10',
-    install_requires=['rtree',
-                      'numpy',
+    install_requires=['rtree==1.2.0',
+                      'numpy>=1.25',
                       'plotly'],
 )
