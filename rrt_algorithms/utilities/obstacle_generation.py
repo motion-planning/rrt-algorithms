@@ -1,10 +1,18 @@
+from __future__ import annotations
+
 import random
 import uuid
 
 import numpy as np
 
+from typing import TYPE_CHECKING
 
-def generate_random_obstacles(X, start, end, n):
+if TYPE_CHECKING:
+    from rrt_algorithms.search_space.search_space import SearchSpace
+
+
+
+def generate_random_obstacles(X: SearchSpace, start, end, n):
     """
     Generates n random obstacles without disrupting world connectivity.
     It also respects start and end points so that they don't lie inside of an obstacle.
@@ -13,7 +21,7 @@ def generate_random_obstacles(X, start, end, n):
     i = 0
     obstacles = []
     while i < n:
-        center = np.empty(len(X.dimension_lengths), np.float)
+        center = np.empty(len(X.dimension_lengths), float)
         scollision = True
         fcollision = True
         edge_lengths = []
@@ -35,8 +43,8 @@ def generate_random_obstacles(X, start, end, n):
                 fcollision = False
 
         # Check if any part of the obstacle is inside of another obstacle.
-        min_corner = np.empty(X.dimensions, np.float)
-        max_corner = np.empty(X.dimensions, np.float)
+        min_corner = np.empty(X.dimensions, float)
+        max_corner = np.empty(X.dimensions, float)
         for j in range(X.dimensions):
             min_corner[j] = center[j] - edge_lengths[j]
             max_corner[j] = center[j] + edge_lengths[j]
@@ -46,7 +54,7 @@ def generate_random_obstacles(X, start, end, n):
             continue
         i += 1
         obstacles.append(obstacle)
-        X.obs.add(uuid.uuid4(), tuple(obstacle), tuple(obstacle))
+        X.obs.insert(uuid.uuid4().int, tuple(obstacle), tuple(obstacle))
 
     return obstacles
 
@@ -57,4 +65,4 @@ def obstacle_generator(obstacles):
     :param obstacles: list of obstacles
     """
     for obstacle in obstacles:
-        yield (uuid.uuid4(), obstacle, obstacle)
+        yield (uuid.uuid4().int, obstacle, obstacle)
