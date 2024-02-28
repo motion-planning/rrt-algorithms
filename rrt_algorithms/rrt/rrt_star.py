@@ -8,7 +8,7 @@ from rrt_algorithms.rrt.rrt import RRT
 
 
 class RRTStar(RRT):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
+    def __init__(self, X, q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
         """
         RRT* Search
         :param X: Search Space
@@ -20,7 +20,7 @@ class RRTStar(RRT):
         :param prc: probability of checking whether there is a solution
         :param rewire_count: number of nearby vertices to rewire
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc)
+        super().__init__(X, q, x_init, x_goal, max_samples, r, prc)
         self.rewire_count = rewire_count if rewire_count is not None else 0
         self.c_best = float('inf')  # length of best solution thus far
 
@@ -92,22 +92,20 @@ class RRTStar(RRT):
         self.add_edge(0, self.x_init, None)
 
         while True:
-            for q in self.Q:  # iterate over different edge lengths
-                for i in range(q[1]):  # iterate over number of edges of given length to add
-                    x_new, x_nearest = self.new_and_near(0, q)
-                    if x_new is None:
-                        continue
+            x_new, x_nearest = self.new_and_near(0, self.q)
+            if x_new is None:
+                continue
 
-                    # get nearby vertices and cost-to-come
-                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
+            # get nearby vertices and cost-to-come
+            L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
-                    # check nearby vertices for total cost and connect shortest valid edge
-                    self.connect_shortest_valid(0, x_new, L_near)
+            # check nearby vertices for total cost and connect shortest valid edge
+            self.connect_shortest_valid(0, x_new, L_near)
 
-                    if x_new in self.trees[0].E:
-                        # rewire tree
-                        self.rewire(0, x_new, L_near)
+            if x_new in self.trees[0].E:
+                # rewire tree
+                self.rewire(0, x_new, L_near)
 
-                    solution = self.check_solution()
-                    if solution[0]:
-                        return solution[1]
+            solution = self.check_solution()
+            if solution[0]:
+                return solution[1]

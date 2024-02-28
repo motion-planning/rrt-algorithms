@@ -7,7 +7,7 @@ from rrt_algorithms.utilities.geometry import dist_between_points, pairwise
 
 
 class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01,
+    def __init__(self, X, q, x_init, x_goal, max_samples, r, prc=0.01,
                  rewire_count: int = None, conditional_rewire: bool = False):
         """
         Bidirectional RRT* Search
@@ -22,7 +22,7 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
         :param conditional_rewire: if True, set rewire count to 1 until solution found,
         then set to specified rewire count (ensure runtime complexity guarantees)
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc,
+        super().__init__(X, q, x_init, x_goal, max_samples, r, prc,
                          1 if conditional_rewire else rewire_count)
         self.original_rewire_count = rewire_count
 
@@ -41,49 +41,47 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
         self.add_edge(1, self.x_goal, None)
 
         while True:
-            for q in self.Q:  # iterate over different edge lengths
-                for i in range(q[1]):  # iterate over number of edges of given length to add
-                    x_new, x_nearest = self.new_and_near(0, q)
-                    if x_new is None:
-                        continue
+            x_new, x_nearest = self.new_and_near(0, self.q)
+            if x_new is None:
+                continue
 
-                    # get nearby vertices and cost-to-come
-                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
+            # get nearby vertices and cost-to-come
+            L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
-                    # check nearby vertices for total cost and connect shortest valid edge
-                    self.connect_shortest_valid(0, x_new, L_near)
+            # check nearby vertices for total cost and connect shortest valid edge
+            self.connect_shortest_valid(0, x_new, L_near)
 
-                    if x_new in self.trees[0].E:
-                        # rewire tree
-                        self.rewire(0, x_new, L_near)
+            if x_new in self.trees[0].E:
+                # rewire tree
+                self.rewire(0, x_new, L_near)
 
-                        # nearby vertices from opposite tree and cost-to-come
-                        L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
+                # nearby vertices from opposite tree and cost-to-come
+                L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
-                        self.connect_trees(0, 1, x_new, L_near)
-                        self.rewire_count = self.original_rewire_count
+                self.connect_trees(0, 1, x_new, L_near)
+                self.rewire_count = self.original_rewire_count
 
-                    self.lazy_shortening()
+            self.lazy_shortening()
 
-                    if self.prc and random.random() < self.prc:  # probabilistically check if solution found
-                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
-                        if self.sigma_best is not None:
-                            print("Can connect to goal")
-                            self.unswap()
+            if self.prc and random.random() < self.prc:  # probabilistically check if solution found
+                print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                if self.sigma_best is not None:
+                    print("Can connect to goal")
+                    self.unswap()
 
-                            return self.sigma_best
+                    return self.sigma_best
 
-                    if self.samples_taken >= self.max_samples:
-                        self.unswap()
+            if self.samples_taken >= self.max_samples:
+                self.unswap()
 
-                        if self.sigma_best is not None:
-                            print("Can connect to goal")
+                if self.sigma_best is not None:
+                    print("Can connect to goal")
 
-                            return self.sigma_best
-                        else:
-                            print("Could not connect to goal")
+                    return self.sigma_best
+                else:
+                    print("Could not connect to goal")
 
-                        return self.sigma_best
+                return self.sigma_best
 
             self.swap_trees()
 
@@ -116,7 +114,9 @@ class RRTStarBidirectionalHeuristic(RRTStarBidirectional):
 
                 # update best path
                 # remove cost of removed edges
-                self.c_best -= sum(dist_between_points(i, j) for i, j in pairwise(self.sigma_best[a:b + 1]))
+                self.c_best -= sum(dist_between_points(i, j)
+                                   for i, j in pairwise(self.sigma_best[a:b + 1]))
                 # add cost of new edge
-                self.c_best += dist_between_points(self.sigma_best[a], self.sigma_best[b])
+                self.c_best += dist_between_points(
+                    self.sigma_best[a], self.sigma_best[b])
                 self.sigma_best = self.sigma_best[:a + 1] + self.sigma_best[b:]

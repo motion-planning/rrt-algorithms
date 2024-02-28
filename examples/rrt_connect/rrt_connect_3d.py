@@ -14,7 +14,7 @@ Obstacles = np.array(
 x_init = (0, 0, 0)  # starting location
 x_goal = (100, 100, 100)  # goal location
 
-Q = np.array([2])  # length of tree edges
+q = 2  # length of tree edges
 r = 0.5  # length of smallest edge to check for intersection with obstacles
 max_samples = 1024  # max number of samples to take before timing out
 prc = 0.1  # probability of checking for a connection to goal
@@ -23,7 +23,7 @@ prc = 0.1  # probability of checking for a connection to goal
 X = SearchSpace(X_dimensions, Obstacles)
 
 # create rrt_search
-rrt_connect = RRTConnect(X, Q, x_init, x_goal, max_samples, r, prc)
+rrt_connect = RRTConnect(X, q, x_init, x_goal, max_samples, r, prc)
 path = rrt_connect.rrt_connect()
 # plot
 plot = Plot("rrt_connect_3d")

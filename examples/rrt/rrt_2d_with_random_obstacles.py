@@ -11,7 +11,7 @@ X_dimensions = np.array([(0, 100), (0, 100)])  # dimensions of Search Space
 x_init = (0, 0)  # starting location
 x_goal = (100, 100)  # goal location
 
-Q = np.array([(8, 4)])  # length of tree edges
+q = 8  # length of tree edges
 r = 1  # length of smallest edge to check for intersection with obstacles
 max_samples = 1024  # max number of samples to take before timing out
 prc = 0.1  # probability of checking for a connection to goal
@@ -21,7 +21,7 @@ X = SearchSpace(X_dimensions)
 n = 50
 Obstacles = generate_random_obstacles(X, x_init, x_goal, n)
 # create rrt_search
-rrt = RRT(X, Q, x_init, x_goal, max_samples, r, prc)
+rrt = RRT(X, q, x_init, x_goal, max_samples, r, prc)
 path = rrt.rrt_search()
 
 # plot

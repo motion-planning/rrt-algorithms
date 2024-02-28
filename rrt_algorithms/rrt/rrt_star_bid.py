@@ -8,7 +8,7 @@ from rrt_algorithms.rrt.rrt_star import RRTStar
 
 
 class RRTStarBidirectional(RRTStar):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
+    def __init__(self, X, q, x_init, x_goal, max_samples, r, prc=0.01, rewire_count=None):
         """
         Bidirectional RRT* Search
         :param X: Search Space
@@ -20,7 +20,7 @@ class RRTStarBidirectional(RRTStar):
         :param prc: probability of checking whether there is a solution
         :param rewire_count: number of nearby vertices to rewire
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
+        super().__init__(X, q, x_init, x_goal, max_samples, r, prc, rewire_count)
         self.sigma_best = None  # best solution thus far
         self.swapped = False
 
@@ -83,45 +83,43 @@ class RRTStarBidirectional(RRTStar):
         self.add_edge(1, self.x_goal, None)
 
         while True:
-            for q in self.Q:  # iterate over different edge lengths
-                for i in range(q[1]):  # iterate over number of edges of given length to add
-                    x_new, x_nearest = self.new_and_near(0, q)
-                    if x_new is None:
-                        continue
+            x_new, x_nearest = self.new_and_near(0, self.q)
+            if x_new is None:
+                continue
 
-                    # get nearby vertices and cost-to-come
-                    L_near = self.get_nearby_vertices(0, self.x_init, x_new)
+            # get nearby vertices and cost-to-come
+            L_near = self.get_nearby_vertices(0, self.x_init, x_new)
 
-                    # check nearby vertices for total cost and connect shortest valid edge
-                    self.connect_shortest_valid(0, x_new, L_near)
+            # check nearby vertices for total cost and connect shortest valid edge
+            self.connect_shortest_valid(0, x_new, L_near)
 
-                    if x_new in self.trees[0].E:
-                        # rewire tree
-                        self.rewire(0, x_new, L_near)
+            if x_new in self.trees[0].E:
+                # rewire tree
+                self.rewire(0, x_new, L_near)
 
-                        # nearby vertices from opposite tree and cost-to-come
-                        L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
+                # nearby vertices from opposite tree and cost-to-come
+                L_near = self.get_nearby_vertices(1, self.x_goal, x_new)
 
-                        self.connect_trees(0, 1, x_new, L_near)
+                self.connect_trees(0, 1, x_new, L_near)
 
-                    if self.prc and random.random() < self.prc:  # probabilistically check if solution found
-                        print("Checking if can connect to goal at", str(self.samples_taken), "samples")
-                        if self.sigma_best is not None:
-                            print("Can connect to goal")
-                            self.unswap()
+            if self.prc and random.random() < self.prc:  # probabilistically check if solution found
+                print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                if self.sigma_best is not None:
+                    print("Can connect to goal")
+                    self.unswap()
 
-                            return self.sigma_best
+                    return self.sigma_best
 
-                    if self.samples_taken >= self.max_samples:
-                        self.unswap()
+            if self.samples_taken >= self.max_samples:
+                self.unswap()
 
-                        if self.sigma_best is not None:
-                            print("Can connect to goal")
+                if self.sigma_best is not None:
+                    print("Can connect to goal")
 
-                            return self.sigma_best
-                        else:
-                            print("Could not connect to goal")
+                    return self.sigma_best
+                else:
+                    print("Could not connect to goal")
 
-                        return self.sigma_best
+                return self.sigma_best
 
             self.swap_trees()

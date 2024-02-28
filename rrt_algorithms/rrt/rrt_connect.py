@@ -14,7 +14,7 @@ class Status(enum.Enum):
 
 
 class RRTConnect(RRTBase):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01):
+    def __init__(self, X, q, x_init, x_goal, max_samples, r, prc=0.01):
         """
         Template RRTConnect planner
         :param X: Search Space
@@ -25,7 +25,7 @@ class RRTConnect(RRTBase):
         :param r: resolution of points to sample along edge when checking for collisions
         :param prc: probability of checking whether there is a solution
         """
-        super().__init__(X, Q, x_init, x_goal, max_samples, r, prc)
+        super().__init__(X, q, x_init, x_goal, max_samples, r, prc)
         self.swapped = False
 
     def swap_trees(self):
@@ -45,7 +45,7 @@ class RRTConnect(RRTBase):
 
     def extend(self, tree, x_rand):
         x_nearest = self.get_nearest(tree, x_rand)
-        x_new = steer(x_nearest, x_rand, self.Q[0])
+        x_new = steer(x_nearest, x_rand, self.q)
         if self.connect_to_point(tree, x_nearest, x_new):
             if np.abs(np.sum(np.array(x_new) - np.array(x_rand))) < 1e-2:
                 return x_new, Status.REACHED
@@ -68,6 +68,7 @@ class RRTConnect(RRTBase):
         self.add_tree()
         self.add_vertex(1, self.x_goal)
         self.add_edge(1, self.x_goal, None)
+        
         while self.samples_taken < self.max_samples:
             x_rand = self.X.sample_free()
             x_new, status = self.extend(0, x_rand)

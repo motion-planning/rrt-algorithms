@@ -7,11 +7,11 @@ from rrt_algorithms.utilities.geometry import steer
 
 
 class RRTBase(object):
-    def __init__(self, X, Q, x_init, x_goal, max_samples, r, prc=0.01):
+    def __init__(self, X, q, x_init, x_goal, max_samples, r, prc=0.01):
         """
         Template RRT planner
         :param X: Search Space
-        :param Q: list of lengths of edges added to tree
+        :param q: length of edges added to tree
         :param x_init: tuple, initial location
         :param x_goal: tuple, goal location
         :param max_samples: max number of samples to take
@@ -21,7 +21,7 @@ class RRTBase(object):
         self.X = X
         self.samples_taken = 0
         self.max_samples = max_samples
-        self.Q = Q
+        self.q = q
         self.r = r
         self.prc = prc
         self.x_init = x_init
@@ -82,7 +82,7 @@ class RRTBase(object):
         """
         x_rand = self.X.sample_free()
         x_nearest = self.get_nearest(tree, x_rand)
-        x_new = self.bound_point(steer(x_nearest, x_rand, q[0]))
+        x_new = self.bound_point(steer(x_nearest, x_rand, q))
         # check if new point is in X_free and not already in V
         if not self.trees[0].V.count(x_new) == 0 or not self.X.obstacle_free(x_new):
             return None, None
@@ -113,7 +113,8 @@ class RRTBase(object):
         if self.x_goal in self.trees[tree].E and x_nearest in self.trees[tree].E[self.x_goal]:
             # tree is already connected to goal using nearest vertex
             return True
-        if self.X.collision_free(x_nearest, self.x_goal, self.r):  # check if obstacle-free
+        # check if obstacle-free
+        if self.X.collision_free(x_nearest, self.x_goal, self.r):
             return True
         return False
 

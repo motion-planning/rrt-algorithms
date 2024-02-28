@@ -12,7 +12,7 @@ X_dimensions = np.array([(0, 100), (0, 100), (0, 100)])  # dimensions of Search 
 x_init = (0, 0, 0)  # starting location
 x_goal = (100, 100, 100)  # goal location
 
-Q = np.array([(8, 4)])  # length of tree edges
+q = 8  # length of tree edges
 r = 1  # length of smallest edge to check for intersection with obstacles
 max_samples = 1024  # max number of samples to take before timing out
 rewire_count = 32  # optional, number of nearby branches to rewire
@@ -24,7 +24,7 @@ n = 50
 Obstacles = generate_random_obstacles(X, x_init, x_goal, n)
 
 # create rrt_search
-rrt = RRTStarBidirectionalHeuristic(X, Q, x_init, x_goal, max_samples, r, prc, rewire_count)
+rrt = RRTStarBidirectionalHeuristic(X, q, x_init, x_goal, max_samples, r, prc, rewire_count)
 path = rrt.rrt_star_bid_h()
 
 # plot
