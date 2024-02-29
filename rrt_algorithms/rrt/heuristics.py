@@ -1,7 +1,7 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 
-from src.utilities.geometry import dist_between_points
+from rrt_algorithms.utilities.geometry import dist_between_points
 
 
 def cost_to_go(a: tuple, b: tuple) -> float:

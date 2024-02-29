@@ -9,6 +9,7 @@ class Tree(object):
         """
         p = index.Property()
         p.dimension = X.dimensions
-        self.V = index.Index(interleaved=True, properties=p)  # vertices in an rtree
+        # vertices in an rtree
+        self.V = index.Index(interleaved=True, properties=p)
         self.V_count = 0
         self.E = {}  # edges in form E[child] = parent
