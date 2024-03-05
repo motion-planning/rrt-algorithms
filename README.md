@@ -31,7 +31,6 @@ Non-axis aligned (hyper)rectangles or other obstacle representations should also
 ### Resolution
 Assign resolution of edges:
 - `q`: Distance away from existing vertices to probe.
-- `Q`: Array of tuples, where each tuple corresponds to (distance q, number of times to try distance q). Will iterate through all tuples until a solution is found or the max number of samples is hit. Intended for situations where you want to try various lengths of `q`. Otherwise can just use a single base case such as `(q, 1)`.
 - `r`: Discretization length to use for edges when sampling along them to check for collisions. Higher numbers run faster, but may lead to undetected collisions.
 
 ### Examples
