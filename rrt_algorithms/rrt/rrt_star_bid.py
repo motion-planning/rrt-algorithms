@@ -22,6 +22,7 @@ class RRTStarBidirectional(RRTStar):
         """
         super().__init__(X, q, x_init, x_goal, max_samples, r, prc, rewire_count)
         self.sigma_best = None  # best solution thus far
+        self.c_best = float('inf')  # length of best solution thus far
         self.swapped = False
 
     def connect_trees(self, a, b, x_new, L_near):
@@ -83,7 +84,7 @@ class RRTStarBidirectional(RRTStar):
         self.add_edge(1, self.x_goal, None)
 
         while True:
-            x_new, x_nearest = self.new_and_near(0, self.q)
+            x_new, _ = self.new_and_near(0, self.q)
             if x_new is None:
                 continue
 
@@ -103,7 +104,8 @@ class RRTStarBidirectional(RRTStar):
                 self.connect_trees(0, 1, x_new, L_near)
 
             if self.prc and random.random() < self.prc:  # probabilistically check if solution found
-                print("Checking if can connect to goal at", str(self.samples_taken), "samples")
+                print("Checking if can connect to goal at",
+                      str(self.samples_taken), "samples")
                 if self.sigma_best is not None:
                     print("Can connect to goal")
                     self.unswap()

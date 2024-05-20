@@ -22,7 +22,6 @@ class RRTStar(RRT):
         """
         super().__init__(X, q, x_init, x_goal, max_samples, r, prc)
         self.rewire_count = rewire_count if rewire_count is not None else 0
-        self.c_best = float('inf')  # length of best solution thus far
 
     def get_nearby_vertices(self, tree, x_init, x_new):
         """
@@ -51,9 +50,10 @@ class RRTStar(RRT):
         :param L_near: list of nearby vertices used to rewire
         :return:
         """
-        for c_near, x_near in L_near:
+        for _, x_near in L_near:
             curr_cost = path_cost(self.trees[tree].E, self.x_init, x_near)
-            tent_cost = path_cost(self.trees[tree].E, self.x_init, x_new) + segment_cost(x_new, x_near)
+            tent_cost = path_cost(
+                self.trees[tree].E, self.x_init, x_new) + segment_cost(x_new, x_near)
             if tent_cost < curr_cost and self.X.collision_free(x_near, x_new, self.r):
                 self.trees[tree].E[x_near] = x_new
 
@@ -65,8 +65,8 @@ class RRTStar(RRT):
         :param L_near: list of nearby vertices
         """
         # check nearby vertices for total cost and connect shortest valid edge
-        for c_near, x_near in L_near:
-            if c_near + cost_to_go(x_near, self.x_goal) < self.c_best and self.connect_to_point(tree, x_near, x_new):
+        for _, x_near in L_near:
+            if self.connect_to_point(tree, x_near, x_new):
                 break
 
     def current_rewire_count(self, tree):
