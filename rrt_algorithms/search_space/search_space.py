@@ -7,71 +7,75 @@ from rtree import index
 from rrt_algorithms.utilities.geometry import es_points_along_line
 from rrt_algorithms.utilities.obstacle_generation import obstacle_generator
 
+class SearchSpace:
+    def __init__(self, dimension_lengths, obstacles=None):
+        self.dimensions = len(dimension_lengths)
+        self.dimension_lengths = dimension_lengths
+        self.obstacles = obstacles if obstacles is not None else []
 
-class SearchSpace(object):
-    def __init__(self, dimension_lengths, O=None):
+    def obstacle_free(self, point):
         """
-        Initialize Search Space
-        :param dimension_lengths: range of each dimension
-        :param O: list of obstacles
+        Check if the point is free from obstacles.
+        :param point: Tuple (x, y, z)
+        :return: True if the point is free of obstacles, False otherwise.
         """
-        # sanity check
-        if len(dimension_lengths) < 2:
-            raise Exception("Must have at least 2 dimensions")
-        self.dimensions = len(dimension_lengths)  # number of dimensions
-        # sanity checks
-        if any(len(i) != 2 for i in dimension_lengths):
-            raise Exception("Dimensions can only have a start and end")
-        if any(i[0] >= i[1] for i in dimension_lengths):
-            raise Exception("Dimension start must be less than dimension end")
-        self.dimension_lengths = dimension_lengths  # length of each dimension
-        p = index.Property()
-        p.dimension = self.dimensions
-        if O is None:
-            self.obs = index.Index(interleaved=True, properties=p)
-        else:
-            # r-tree representation of obstacles
-            # sanity check
-            if any(len(o) / 2 != len(dimension_lengths) for o in O):
-                raise Exception("Obstacle has incorrect dimension definition")
-            if any(o[i] >= o[int(i + len(o) / 2)] for o in O for i in range(int(len(o) / 2))):
-                raise Exception("Obstacle start must be less than obstacle end")
-            self.obs = index.Index(obstacle_generator(O), interleaved=True, properties=p)
+        for obstacle in self.obstacles:
+            x_center, y_center, z_min, z_max, radius = obstacle
+            
+            # Check if the point is within the cylinder's height bounds
+            if z_min <= point[2] <= z_max:
+                # Check if the point is within the radius of the cylinder
+                distance_to_axis = np.sqrt((point[0] - x_center) ** 2 + (point[1] - y_center) ** 2)
+                if distance_to_axis <= radius:
+                    return False  # The point is inside the obstacle
+        return True  # The point is free of obstacles
 
-    def obstacle_free(self, x):
+    def collision_free(self, x_a, x_b, r):
         """
-        Check if a location resides inside of an obstacle
-        :param x: location to check
-        :return: True if not inside an obstacle, False otherwise
+        Check if a line segment between x_a and x_b is free from obstacles.
+        :param x_a: Starting point of the line segment.
+        :param x_b: Ending point of the line segment.
+        :param r: Resolution for sampling along the line.
+        :return: True if the line segment does not intersect any obstacles, False otherwise.
         """
-        return self.obs.count(x) == 0
+        # Generate points along the line segment between x_a and x_b
+        points = self.es_points_along_line(x_a, x_b, r)
+        for point in points:
+            if not self.obstacle_free(point):
+                return False  # Collision detected
+        return True  # No collision
 
-    def sample_free(self):
-        """
-        Sample a location within X_free
-        :return: random location within X_free
-        """
-        while True:  # sample until not inside of an obstacle
-            x = self.sample()
-            if self.obstacle_free(x):
-                return x
+    
 
-    def collision_free(self, start, end, r):
+    def es_points_along_line(self, x_a, x_b, r):
         """
-        Check if a line segment intersects an obstacle
-        :param start: starting point of line
-        :param end: ending point of line
-        :param r: resolution of points to sample along edge when checking for collisions
-        :return: True if line segment does not intersect an obstacle, False otherwise
+        Generate points along a line segment between x_a and x_b.
+        :param x_a: Starting point of the line segment.
+        :param x_b: Ending point of the line segment.
+        :param r: Resolution for sampling points.
+        :return: List of points along the line segment.
         """
-        points = es_points_along_line(start, end, r)
-        coll_free = all(map(self.obstacle_free, points))
-        return coll_free
+        distance = np.linalg.norm(np.array(x_b) - np.array(x_a))
+        num_points = int(distance / r) + 1
+        return [tuple(np.array(x_a) + t * (np.array(x_b) - np.array(x_a))) for t in np.linspace(0, 1, num_points)]
+
+
 
     def sample(self):
         """
-        Return a random location within X
-        :return: random location within X (not necessarily X_free)
+        Return a random location within the search space dimensions.
+        :return: A tuple representing a random location within the search space.
         """
-        x = np.random.uniform(self.dimension_lengths[:, 0], self.dimension_lengths[:, 1])
-        return tuple(x)
+        return tuple(np.random.uniform(low, high) for low, high in self.dimension_lengths)
+
+    def sample_free(self):
+        """
+        Sample a random location within the search space that is free from obstacles.
+        :return: A tuple representing a random location within the search space that is obstacle-free.
+        """
+        while True:
+            point = self.sample()
+            if self.obstacle_free(point):
+                return point
+
+

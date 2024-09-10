@@ -1,18 +1,22 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 import numpy as np
+import sys
+sys.path.append('/home/dell/rrt-algorithms')
 
 from rrt_algorithms.rrt.rrt import RRT
-from rrt_algorithms.search_space.search_space import SearchSpace
-from rrt_algorithms.utilities.plotting import Plot
+from rrt_algorithms.search_space.search_space0 import SearchSpace
+from rrt_algorithms.utilities.plotting0 import Plot
+
+
 
 X_dimensions = np.array([(0, 100), (0, 100), (0, 100)])  # dimensions of Search Space
 # obstacles
 Obstacles = np.array(
-    [(20, 20, 20, 40, 40, 40), (20, 20, 60, 40, 40, 80), (20, 60, 20, 40, 80, 40), (60, 60, 20, 80, 80, 40),
+    [(10, 10, 10, 15, 15, 15),(20, 20, 20, 30, 30, 30),(30, 30, 30, 35, 35, 35), (1, 2, 6, 4, 4, 8), (20, 60, 20, 25, 65, 25), (60, 60, 20, 80, 80, 40),
      (60, 20, 20, 80, 40, 40), (60, 20, 60, 80, 40, 80), (20, 60, 60, 40, 80, 80), (60, 60, 60, 80, 80, 80)])
 x_init = (0, 0, 0)  # starting location
-x_goal = (100, 100, 100)  # goal location
+x_goal = (8, 50, 50)  # goal location
 
 q = 8  # length of tree edges
 r = 1  # length of smallest edge to check for intersection with obstacles

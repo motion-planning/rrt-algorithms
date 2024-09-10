@@ -1,11 +1,12 @@
 # This file is subject to the terms and conditions defined in
 # file 'LICENSE', which is part of this source code package.
 import numpy as np
-
+import sys
+sys.path.append('/home/dell/rrt-algorithms')
 from rrt_algorithms.rrt.rrt import RRT
-from rrt_algorithms.search_space.search_space import SearchSpace
+from rrt_algorithms.search_space.search_space0 import SearchSpace
 from rrt_algorithms.utilities.obstacle_generation import generate_random_obstacles
-from rrt_algorithms.utilities.plotting import Plot
+from rrt_algorithms.utilities.plotting0 import Plot
 
 X_dimensions = np.array([(0, 100), (0, 100), (0, 100)])  # dimensions of Search Space
 x_init = (0, 0, 0)  # starting location

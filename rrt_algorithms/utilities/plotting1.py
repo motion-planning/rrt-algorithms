@@ -73,23 +73,16 @@ class Plot(object):
                     self.data.append(trace)
 
     def plot_obstacles(self, X, obstacles):
-        """
-        Plot obstacles in the search space.
-        :param X: Search Space
-        :param obstacles: list of obstacles (cylindrical in this case)
-        """
-        if X.dimensions == 3:  # plot in 3D
+        if X.dimensions == 3:  # Plot in 3D
             for obstacle in obstacles:
                 x_center, y_center, z_min, z_max, radius = obstacle
 
-                # Create the mesh grid for the cylindrical surface
                 z = np.linspace(z_min, z_max, 50)
                 theta = np.linspace(0, 2 * np.pi, 50)
                 theta_grid, z_grid = np.meshgrid(theta, z)
                 x_grid = x_center + radius * np.cos(theta_grid)
                 y_grid = y_center + radius * np.sin(theta_grid)
 
-                # Plot the cylindrical surface
                 obs = go.Surface(
                     x=x_grid,
                     y=y_grid,
@@ -98,9 +91,6 @@ class Plot(object):
                     opacity=0.7
                 )
                 self.data.append(obs)
-        else:  # can't plot in higher dimensions
-            print("Cannot plot in > 3 dimensions")
-
     def draw(self, auto_open=True):
         """
         Render the plot to a file

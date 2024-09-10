@@ -25,7 +25,9 @@ class RRT(RRTBase):
         self.add_edge(0, self.x_init, None)
 
         while True:
+            print(f"q: {self.q}")
             x_new, x_nearest = self.new_and_near(0, self.q)
+            print(f"x_new: {x_new}, x_nearest: {x_nearest}")
 
             if x_new is None:
                 continue
@@ -36,3 +38,4 @@ class RRT(RRTBase):
             solution = self.check_solution()
             if solution[0]:
                 return solution[1]
+

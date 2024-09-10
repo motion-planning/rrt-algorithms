@@ -1,10 +1,15 @@
+## Requirements
+pip install scikit-fuzzy 
+
+pip install --upgrade numpy 
+
+pip install tensorflow keras gym 
+
+pip install tensorflow or pip install tensorflow==2.10.0 
 # rrt
-Collection of rrt-based algorithms that scale to n-dimensions:
+Collection of rrt-based algorithms in 3-dimensions:
 - rrt
-- rrt* (rrt-star)
-- rrt* (bidirectional)
-- rrt* (bidriectional, lazy shortening)
-- rrt connect
+
 
 Utilizes [R-trees](https://en.wikipedia.org/wiki/R-tree) to improve performance by avoiding point-wise collision-checking and distance-checking.
 
@@ -37,14 +42,8 @@ Assign resolution of edges:
 
 ### Examples
 Visualization examples can be found for rrt and rrt* in both 2 and 3 dimensions.
-- [2D RRT](https://plot.ly/~szanlongo/79/plot/)
+
 - [3D RRT](https://plot.ly/~szanlongo/81/plot/)
-- [2D RRT*](https://plot.ly/~szanlongo/83/plot/)
-- [3D RRT*](https://plot.ly/~szanlongo/89/plot/)
-- [2D Bidirectional RRT*](https://plot.ly/~szanlongo/85/plot/)
-- [3D Bidirectional RRT*](https://plot.ly/~szanlongo/87/plot/)
-- [2D Heuristic Bidirectional RRT*](https://plot.ly/~szanlongo/91/plot/)
-- [3D Heuristic Bidirectional RRT*](https://plot.ly/~szanlongo/93/plot/)
 
 ## Contributing
 
@@ -54,12 +53,3 @@ Visualization examples can be found for rrt and rrt* in both 2 and 3 dimensions.
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request :D
 
-## References
-
-1. Steven Michael Lavalle. [Planning Algorithms.](https://lavalle.pl/planning/) New York (Ny), Cambridge University Press, 2014, pp. 228–237, lavalle.pl/planning/.
-2. LaValle, Steven. "[Rapidly-exploring random trees: A new tool for path planning.](https://msl.cs.uiuc.edu/~lavalle/papers/Lav98c.pdf)" Research Report 9811 (1998).
-3. Kuffner, James J., and Steven M. LaValle. "[RRT-connect: An efficient approach to single-query path planning.](https://www.cs.cmu.edu/afs/cs/academic/class/15494-s14/readings/kuffner_icra2000.pdf)" Proceedings 2000 ICRA. Millennium Conference. IEEE International Conference on Robotics and Automation. Symposia Proceedings (Cat. No. 00CH37065). Vol. 2. IEEE, 2000.
-
-## License
-
-[MIT License](https://github.com/motion-planning/rrt-algorithms/blob/master/LICENSE)

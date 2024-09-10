@@ -5,7 +5,7 @@ import sys
 sys.path.append('/home/dell/rrt-algorithms')
 
 
-from rrt_algorithms.search_space.search_space import SearchSpace
+from rrt_algorithms.search_space.search_space1 import SearchSpace
 from rrt_algorithms.rrt.tree import Tree
 from rrt_algorithms.utilities.geometry import steer
 
